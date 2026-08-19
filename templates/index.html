@@ -1,0 +1,2436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hypertension Clinical Assistant & Patient Decision Portal</title>
+  <meta name="description" content="AI-powered hypertension guidelines assistant grounded in WHO, NICE, ACC/AHA, ESC, and USPSTF evidence with patient test report integration." />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Lora:wght@500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf_viewer.min.css" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:             #f0f4f8;
+      --surface:        #ffffff;
+      --surface-2:      #f8fafc;
+      --surface-3:      #eef2f7;
+      --border:         #dde3ed;
+      --navy:           #1a3a5c;
+      --navy-light:     #2c5282;
+      --navy-dark:      #112540;
+      --teal:           #0891b2;
+      --teal-bg:        #e0f2fe;
+      --teal-border:    #bae6fd;
+      --text:           #1e2d3d;
+      --text-muted:     #64748b;
+      --text-light:     #94a3b8;
+      --success:        #059669;
+      --success-bg:     #d1fae5;
+      --success-border: #a7f3d0;
+      --error:          #dc2626;
+      --error-bg:       #fee2e2;
+      --chip-bg:        #e8f4f8;
+      --chip-text:      #0e7490;
+      --chip-border:    #bae6fd;
+      --sidebar-w:      260px;
+      --pdf-w:          440px;
+      --radius:         10px;
+      --radius-sm:      6px;
+      --radius-lg:      14px;
+      --shadow-sm:      0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow-md:      0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+      --shadow-lg:      0 10px 30px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.06);
+    }
+    html { font-size: 15px; }
+    body {
+      font-family: "Inter", -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ══════════════════════════════════════
+       LEFT SIDEBAR
+    ══════════════════════════════════════ */
+    .sidebar {
+      width: var(--sidebar-w);
+      height: 100vh;
+      background: var(--navy-dark);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      overflow: hidden;
+      transition: width 0.28s cubic-bezier(0.4,0,0.2,1);
+      z-index: 20;
+    }
+    body.sidebar-collapsed .sidebar { width: 0; }
+    body.sidebar-collapsed .sidebar > * { opacity: 0; pointer-events: none; transition: opacity 0.15s; }
+
+    .btn-sidebar-toggle {
+      width: 32px; height: 32px;
+      background: var(--surface-3);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; flex-shrink: 0;
+      transition: all 0.15s;
+      color: var(--text-muted);
+      margin-right: 10px;
+    }
+    .btn-sidebar-toggle:hover { background: var(--navy); color: #fff; border-color: var(--navy); }
+
+    /* Brand */
+    .sidebar-brand {
+      padding: 18px 16px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display: flex; align-items: center; gap: 10px;
+    }
+    .sidebar-brand-icon {
+      width: 32px; height: 32px;
+      background: var(--teal);
+      border-radius: 9px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .sidebar-brand-text { line-height: 1.2; }
+    .sidebar-brand-name { font-size: 13px; font-weight: 700; color: #fff; letter-spacing: -0.2px; }
+    .sidebar-brand-sub  { font-size: 10px; color: rgba(255,255,255,0.45); }
+
+    /* Action Buttons in Sidebar */
+    .sidebar-actions {
+      padding: 10px 12px 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .btn-new-chat {
+      padding: 9px 12px;
+      background: rgba(8,145,178,0.18);
+      border: 1px solid rgba(8,145,178,0.35);
+      border-radius: var(--radius-sm);
+      color: #7dd3ee;
+      font-size: 12.5px; font-weight: 600;
+      cursor: pointer;
+      display: flex; align-items: center; gap: 8px;
+      transition: all 0.18s;
+      font-family: inherit;
+      width: 100%;
+    }
+    .btn-new-chat:hover { background: rgba(8,145,178,0.32); color: #fff; border-color: var(--teal); }
+
+    .btn-patient-sidebar {
+      padding: 8px 12px;
+      background: rgba(245,158,11,0.12);
+      border: 1px solid rgba(245,158,11,0.3);
+      border-radius: var(--radius-sm);
+      color: #fcd34d;
+      font-size: 11.5px; font-weight: 600;
+      cursor: pointer;
+      display: flex; align-items: center; gap: 8px;
+      transition: all 0.18s;
+      font-family: inherit;
+      width: 100%;
+    }
+    .btn-patient-sidebar:hover { background: rgba(245,158,11,0.24); color: #fff; border-color: #f59e0b; }
+
+    /* Chat list */
+    .chat-list-label {
+      padding: 10px 16px 4px;
+      font-size: 10px; font-weight: 700;
+      color: rgba(255,255,255,0.3);
+      text-transform: uppercase; letter-spacing: 1px;
+    }
+    .chat-list {
+      flex: 1; overflow-y: auto; padding: 4px 8px 8px;
+    }
+    .chat-list::-webkit-scrollbar { width: 4px; }
+    .chat-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 999px; }
+
+    .chat-group-label {
+      padding: 8px 8px 4px;
+      font-size: 10px; font-weight: 600;
+      color: rgba(255,255,255,0.25);
+      text-transform: uppercase; letter-spacing: 0.8px;
+    }
+    .chat-item {
+      padding: 8px 10px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex; align-items: center; gap: 8px;
+      transition: all 0.14s;
+      margin-bottom: 1px;
+      position: relative;
+    }
+    .chat-item:hover { background: rgba(255,255,255,0.07); }
+    .chat-item.active { background: rgba(8,145,178,0.2); }
+    .chat-item-icon {
+      width: 22px; height: 22px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 5px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; font-size: 11px;
+    }
+    .chat-item.active .chat-item-icon { background: rgba(8,145,178,0.4); }
+    .chat-item-info { flex: 1; overflow: hidden; }
+    .chat-item-title {
+      font-size: 12px; font-weight: 500; color: rgba(255,255,255,0.8);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      line-height: 1.3;
+    }
+    .chat-item.active .chat-item-title { color: #fff; }
+    .chat-item-date { font-size: 10px; color: rgba(255,255,255,0.3); margin-top: 1px; }
+    .chat-item-del {
+      opacity: 0; position: absolute; right: 6px;
+      background: rgba(220,38,38,0.2); border: none;
+      color: rgba(255,100,100,0.8);
+      width: 20px; height: 20px; border-radius: 4px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      font-size: 11px; transition: all 0.14s; font-family: inherit;
+    }
+    .chat-item:hover .chat-item-del { opacity: 1; }
+    .chat-item-del:hover { background: rgba(220,38,38,0.5); color: #fff; }
+
+    /* Sidebar bottom */
+    .sidebar-footer {
+      padding: 10px 12px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    .btn-upload-sidebar {
+      width: 100%; padding: 8px 12px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: var(--radius-sm);
+      color: rgba(255,255,255,0.6);
+      font-size: 11.5px; font-weight: 600;
+      cursor: pointer;
+      display: flex; align-items: center; gap: 7px;
+      transition: all 0.18s; font-family: inherit;
+    }
+    .btn-upload-sidebar:hover { background: rgba(255,255,255,0.12); color: #fff; border-color: rgba(255,255,255,0.2); }
+
+    /* ══════════════════════════════════════
+       MAIN AREA
+    ══════════════════════════════════════ */
+    .main-area {
+      flex: 1; display: flex; flex-direction: column;
+      height: 100vh; overflow: hidden; min-width: 0;
+    }
+
+    /* Topbar */
+    .topbar {
+      height: 52px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 18px;
+      flex-shrink: 0;
+      box-shadow: var(--shadow-sm);
+      z-index: 10;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 8px; overflow: hidden; }
+    .topbar-right { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    .topbar-label { font-size: 11px; color: var(--text-light); font-weight: 500; }
+    .guideline-badges { display: flex; align-items: center; gap: 6px; }
+    .badge-guideline {
+      background: var(--surface-2); border: 1px solid var(--border);
+      color: var(--text-muted); font-size: 11px; font-weight: 500;
+      padding: 3px 9px; border-radius: 999px;
+      display: flex; align-items: center; gap: 5px;
+      transition: all 0.12s;
+    }
+    .badge-guideline:hover { border-color: var(--teal-border); background: var(--teal-bg); }
+    .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--success); flex-shrink: 0; }
+
+    /* Topbar Patient & User Controls */
+    .btn-topbar-patient {
+      padding: 5px 11px;
+      background: var(--chip-bg);
+      border: 1px solid var(--chip-border);
+      border-radius: 999px;
+      color: var(--chip-text);
+      font-size: 11.5px; font-weight: 600;
+      display: flex; align-items: center; gap: 6px;
+      cursor: pointer; transition: all 0.15s; font-family: inherit;
+    }
+    .btn-topbar-patient:hover { background: #d0effa; border-color: var(--teal); }
+    .btn-topbar-patient.active { background: #fef3c7; border-color: #fcd34d; color: #b45309; }
+
+    .btn-topbar-auth {
+      padding: 6px 13px;
+      background: var(--navy);
+      border: none;
+      border-radius: var(--radius-sm);
+      color: #fff;
+      font-size: 12px; font-weight: 600;
+      display: flex; align-items: center; gap: 6px;
+      cursor: pointer; transition: all 0.15s; font-family: inherit;
+    }
+    .btn-topbar-auth:hover { background: var(--navy-light); }
+
+    /* User Profile Dropdown */
+    .user-profile-btn {
+      display: flex; align-items: center; gap: 7px;
+      padding: 4px 10px 4px 6px;
+      background: var(--surface-2); border: 1px solid var(--border);
+      border-radius: 999px; cursor: pointer; transition: all 0.15s;
+    }
+    .user-profile-btn:hover { border-color: var(--teal); }
+    .user-avatar {
+      width: 24px; height: 24px; border-radius: 50%;
+      background: var(--teal); color: #fff; font-size: 11px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .user-name-label { font-size: 12px; font-weight: 600; color: var(--navy); max-width: 110px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+    .user-menu-popover {
+      position: absolute; top: calc(100% + 6px); right: 0;
+      width: 210px; background: var(--surface);
+      border: 1px solid var(--border); border-radius: var(--radius);
+      box-shadow: var(--shadow-lg); z-index: 400; display: none;
+      flex-direction: column; padding: 6px;
+    }
+    .user-menu-popover.open { display: flex; }
+    .user-menu-header { padding: 8px 10px 6px; border-bottom: 1px solid var(--border); margin-bottom: 4px; }
+    .user-menu-fullname { font-size: 12.5px; font-weight: 700; color: var(--navy); }
+    .user-menu-email { font-size: 11px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; }
+    .user-menu-item {
+      padding: 7px 10px; font-size: 12px; font-weight: 500; color: var(--text);
+      border-radius: var(--radius-sm); cursor: pointer; display: flex; align-items: center; gap: 8px;
+      transition: background 0.12s; border: none; background: transparent; width: 100%; text-align: left;
+    }
+    .user-menu-item:hover { background: var(--surface-3); }
+    .user-menu-item.logout { color: var(--error); }
+    .user-menu-item.logout:hover { background: var(--error-bg); }
+
+    /* ══════════════════════════════════════
+       PATIENT VITALS ACTIVE BANNER
+    ══════════════════════════════════════ */
+    .patient-banner {
+      background: linear-gradient(90deg, #fffbeb 0%, #fef3c7 100%);
+      border-bottom: 1.5px solid #fde68a;
+      padding: 8px 20px;
+      display: none;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: #92400e;
+      flex-shrink: 0;
+      animation: msgIn 0.2s ease;
+    }
+    .patient-banner.active { display: flex; }
+    .patient-banner-left { display: flex; align-items: center; gap: 10px; overflow: hidden; }
+    .patient-vitals-pill {
+      background: #fef08a; border: 1px solid #facc15;
+      padding: 2px 9px; border-radius: 999px; font-weight: 700; color: #854d0e;
+      font-size: 11px; display: inline-flex; align-items: center; gap: 4px;
+    }
+    .patient-details-link {
+      color: #b45309; font-weight: 600; text-decoration: underline; cursor: pointer;
+    }
+    .patient-banner-close {
+      background: transparent; border: none; color: #b45309; font-size: 14px; cursor: pointer; padding: 2px 6px;
+    }
+    .patient-banner-close:hover { color: var(--error); }
+
+    /* ══════════════════════════════════════
+       APP SHELL
+    ══════════════════════════════════════ */
+    .app-shell {
+      flex: 1; display: flex; position: relative;
+      height: calc(100vh - 52px); overflow: hidden;
+    }
+
+    /* ── Chat column ── */
+    .chat-col {
+      flex: 1; display: flex; flex-direction: column;
+      height: 100%; overflow: hidden; min-width: 0;
+      transition: margin-right 0.3s ease;
+    }
+    .app-shell.pdf-open .chat-col { margin-right: var(--pdf-w); }
+
+    /* Messages area */
+    .messages-area {
+      flex: 1; overflow-y: auto; padding: 20px 0 10px;
+      scroll-behavior: smooth;
+    }
+    .messages-inner { max-width: 740px; margin: 0 auto; padding: 0 24px; }
+
+    /* Welcome state */
+    .welcome-state { text-align: center; padding: 36px 20px 20px; }
+    .welcome-icon {
+      width: 52px; height: 52px; background: var(--navy);
+      border-radius: 16px; display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 14px;
+    }
+    .welcome-eyebrow { font-size: 11px; font-weight: 700; color: var(--teal); text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 6px; }
+    .welcome-state h1 { font-size: 22px; font-weight: 700; color: var(--navy); font-family: "Lora", serif; letter-spacing: -0.3px; margin-bottom: 6px; }
+    .welcome-state p { color: var(--text-muted); font-size: 13px; line-height: 1.65; max-width: 500px; margin: 0 auto 22px; }
+    .suggestions { display: flex; flex-wrap: wrap; gap: 7px; justify-content: center; }
+    .suggestion-chip {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); color: var(--text);
+      font-size: 12px; font-weight: 500; padding: 7px 13px;
+      cursor: pointer; transition: all 0.15s; font-family: inherit;
+      text-align: left; line-height: 1.3; box-shadow: var(--shadow-sm);
+    }
+    .suggestion-chip:hover { border-color: var(--teal-border); background: var(--teal-bg); color: var(--teal); box-shadow: var(--shadow-md); }
+
+    /* Messages */
+    .message-group { margin-bottom: 20px; animation: msgIn 0.25s ease; }
+    @keyframes msgIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+    .user-bubble-wrap { display: flex; justify-content: flex-end; margin-bottom: 8px; }
+    .user-bubble {
+      background: var(--navy); color: #fff;
+      border-radius: 18px 18px 4px 18px;
+      padding: 10px 15px; font-size: 14px; line-height: 1.6;
+      max-width: 82%; box-shadow: var(--shadow-sm);
+    }
+    .user-target-tag {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: rgba(8,145,178,0.25); border: 1px solid rgba(125,211,238,0.4);
+      color: #bae6fd; font-size: 10.5px; font-weight: 600;
+      padding: 2px 7px; border-radius: 6px; margin-bottom: 5px;
+    }
+    .user-patient-tag {
+      display: inline-flex; align-items: center; gap: 4px;
+      background: rgba(245,158,11,0.25); border: 1px solid rgba(253,230,138,0.4);
+      color: #fef08a; font-size: 10.5px; font-weight: 600;
+      padding: 2px 7px; border-radius: 6px; margin-bottom: 5px; margin-right: 4px;
+    }
+
+    .assistant-wrap { display: flex; align-items: flex-start; gap: 9px; }
+    .assistant-avatar {
+      width: 28px; height: 28px; background: var(--navy);
+      border-radius: 8px; display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0; margin-top: 2px;
+    }
+    .assistant-body { flex: 1; min-width: 0; }
+
+    .answer-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 4px 16px 16px 16px;
+      overflow: hidden; box-shadow: var(--shadow-sm); margin-bottom: 8px;
+    }
+    .answer-card-hdr {
+      padding: 8px 15px; background: #f7feff;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 7px;
+    }
+    .answer-hdr-icon {
+      width: 17px; height: 17px; background: var(--teal-bg);
+      border: 1px solid var(--teal-border); border-radius: 5px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .answer-hdr-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--teal); }
+    .answer-card-body { padding: 14px 17px; }
+    .answer-body { font-size: 14px; line-height: 1.8; color: var(--text); }
+    .answer-body p { margin-bottom: 9px; }
+    .answer-body p:last-child { margin-bottom: 0; }
+    .answer-body ul, .answer-body ol { margin: 7px 0 10px 22px; }
+    .answer-body li { margin-bottom: 5px; }
+    .answer-body strong { color: var(--navy); font-weight: 600; }
+    .answer-body h3 { font-size: 13.5px; font-weight: 700; color: var(--navy); margin: 11px 0 4px; }
+
+    /* Citation badges */
+    .cit {
+      display: inline-flex; align-items: center; justify-content: center;
+      background: var(--teal-bg); color: var(--teal);
+      border: 1px solid var(--teal-border); border-radius: 5px;
+      font-size: 10px; font-weight: 700; padding: 0 5px; margin: 0 2px;
+      cursor: pointer; vertical-align: baseline; transition: all 0.15s; position: relative;
+    }
+    .cit:hover { background: var(--teal); color: #fff; transform: translateY(-1px); }
+    .cit-pop {
+      position: absolute; bottom: calc(100% + 8px); left: 50%;
+      transform: translateX(-50%); width: 285px;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 10px 12px;
+      box-shadow: var(--shadow-lg); z-index: 300;
+      pointer-events: none; opacity: 0; display: none;
+      color: var(--text); font-weight: normal; text-align: left;
+    }
+    .cit-pop::after {
+      content: ""; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+      border-width: 6px; border-style: solid;
+      border-color: var(--surface) transparent transparent transparent;
+    }
+    .cit:hover .cit-pop { display: block; opacity: 1; }
+    .cit-pop-head { font-size: 10px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; }
+    .cit-pop-title { font-size: 11.5px; font-weight: 600; color: var(--navy); margin-bottom: 5px; }
+    .cit-pop-quote { font-size: 11px; color: var(--text-muted); line-height: 1.5; background: var(--surface-2); padding: 5px 7px; border-radius: 5px; border-left: 2.5px solid var(--teal); margin-bottom: 5px; max-height: 60px; overflow: hidden; }
+    .cit-pop-action { font-size: 10px; color: var(--teal); font-weight: 500; }
+
+    /* Sources */
+    .sources-wrap { margin-top: 0; }
+    .sources-hdr { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-muted); margin-bottom: 5px; display: flex; align-items: center; gap: 5px; }
+    .sources-grid { display: flex; flex-direction: column; gap: 4px; }
+    .source-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-sm); padding: 7px 11px;
+      display: flex; justify-content: space-between; align-items: center; gap: 8px;
+      cursor: pointer; transition: all 0.14s;
+    }
+    .source-card:hover { border-color: var(--teal-border); background: var(--teal-bg); transform: translateX(2px); }
+    .source-left { display: flex; align-items: center; gap: 8px; flex: 1; overflow: hidden; }
+    .source-num { width: 19px; height: 19px; border-radius: 5px; background: var(--navy); color: #fff; font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .source-info { overflow: hidden; }
+    .source-doc { font-size: 10.5px; font-weight: 600; color: var(--teal); }
+    .source-title { font-size: 11.5px; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tag { background: var(--surface-3); color: var(--text-muted); font-size: 10px; padding: 2px 6px; border-radius: 999px; border: 1px solid var(--border); white-space: nowrap; font-weight: 500; }
+
+    /* Typing */
+    .typing-indicator { display: flex; align-items: center; gap: 9px; padding: 4px 0 14px; color: var(--text-muted); font-size: 12.5px; }
+    .typing-dots { display: flex; gap: 4px; }
+    .typing-dots span { width: 6px; height: 6px; border-radius: 50%; background: var(--teal); opacity: 0.4; animation: typingBounce 1.2s ease-in-out infinite; }
+    .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes typingBounce { 0%,80%,100% { transform: scale(0.7); opacity: 0.4; } 40% { transform: scale(1); opacity: 1; } }
+
+    .error-msg { background: var(--error-bg); border: 1px solid #fca5a5; border-radius: var(--radius-sm); color: var(--error); font-size: 13px; padding: 9px 13px; margin-bottom: 10px; }
+
+    /* ── Input bar ── */
+    .input-bar { flex-shrink: 0; background: var(--surface); border-top: 1px solid var(--border); padding: 12px 0 14px; box-shadow: 0 -4px 16px rgba(0,0,0,0.04); }
+    .input-inner { max-width: 740px; margin: 0 auto; padding: 0 24px; position: relative; }
+    .input-card {
+      background: var(--surface-2); border: 1.5px solid var(--border);
+      border-radius: 14px; padding: 9px 11px 9px 15px;
+      display: flex; align-items: flex-end; gap: 9px;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .input-card:focus-within { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(8,145,178,0.1); background: var(--surface); }
+    .input-card textarea {
+      flex: 1; background: transparent; border: none; outline: none;
+      font-family: inherit; font-size: 14px; line-height: 1.6; color: var(--text);
+      resize: none; min-height: 22px; max-height: 150px; overflow-y: auto;
+    }
+    .input-card textarea::placeholder { color: var(--text-light); }
+    .btn-send {
+      width: 34px; height: 34px; background: var(--navy); border: none; border-radius: 9px;
+      display: flex; align-items: center; justify-content: center; cursor: pointer;
+      flex-shrink: 0; transition: all 0.18s;
+    }
+    .btn-send:hover:not(:disabled) { background: var(--navy-light); box-shadow: 0 3px 10px rgba(26,58,92,0.3); transform: translateY(-1px); }
+    .btn-send:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+    .input-hint { font-size: 11px; color: var(--text-light); margin-top: 6px; text-align: center; }
+    .input-hint kbd { background: var(--surface-3); border: 1px solid var(--border); border-radius: 3px; padding: 0 4px; font-size: 10px; }
+
+    /* ── @ Mention Dropdown / Autocomplete Popup ── */
+    .mention-dropdown {
+      position: absolute;
+      bottom: calc(100% + 10px);
+      left: 24px;
+      right: 24px;
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-lg);
+      z-index: 300;
+      display: none;
+      flex-direction: column;
+      overflow: hidden;
+      max-height: 280px;
+      animation: mentionIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    @keyframes mentionIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .mention-header {
+      padding: 8px 14px;
+      background: var(--surface-2);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+    .mention-list {
+      overflow-y: auto;
+      padding: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+    .mention-item {
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      transition: all 0.12s;
+      border: 1px solid transparent;
+    }
+    .mention-item:hover,
+    .mention-item.selected {
+      background: var(--teal-bg);
+      border-color: var(--teal-border);
+    }
+    .mention-left {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      overflow: hidden;
+    }
+    .mention-icon {
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      background: #fee2e2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .mention-info {
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .mention-title {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--navy);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .mention-subtitle {
+      font-size: 10.5px;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .mention-org-tag {
+      font-size: 10.5px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: var(--surface-3);
+      color: var(--teal);
+      border: 1px solid var(--teal-border);
+      flex-shrink: 0;
+    }
+
+    /* ── Active Target Guideline Filter Badge ── */
+    .target-badge-container {
+      display: none;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 7px;
+    }
+    .target-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: var(--teal-bg);
+      border: 1px solid var(--teal-border);
+      color: var(--teal);
+      padding: 3px 10px;
+      border-radius: 999px;
+      font-size: 11.5px;
+      font-weight: 600;
+      animation: msgIn 0.2s ease;
+    }
+    .target-badge-close {
+      cursor: pointer;
+      background: transparent;
+      border: none;
+      color: var(--teal);
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      line-height: 1;
+      padding: 0 2px;
+    }
+    .target-badge-close:hover { color: var(--error); }
+
+    /* ══════════════════════════════════════
+       PDF PANEL
+     ══════════════════════════════════════ */
+    .pdf-panel {
+      position: fixed; top: 0; right: 0;
+      width: var(--pdf-w); height: 100vh;
+      background: #e8ecf0; border-left: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      z-index: 100; box-shadow: -4px 0 20px rgba(0,0,0,0.08);
+      transform: translateX(100%);
+      transition: transform 0.3s cubic-bezier(0.4,0,0.2,1);
+      min-width: 300px; max-width: 85vw;
+    }
+    .app-shell.pdf-open .pdf-panel { transform: translateX(0); }
+    .pdf-resize-handle {
+      position: absolute; left: 0; top: 0; bottom: 0;
+      width: 5px; cursor: col-resize; z-index: 10;
+      background: transparent; transition: background 0.15s;
+    }
+    .pdf-resize-handle:hover,
+    .pdf-resize-handle.dragging { background: var(--teal); }
+    body.resizing-pdf * { user-select: none !important; }
+    body.resizing-pdf .pdf-panel { transition: none !important; }
+
+    .pdf-toolbar {
+      height: 48px; background: var(--surface); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 13px; flex-shrink: 0; box-shadow: var(--shadow-sm);
+    }
+    .pdf-close-btn {
+      width: 30px; height: 30px; background: var(--error-bg);
+      border: 1px solid #fca5a5; border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; flex-shrink: 0; transition: all 0.15s; color: var(--error); font-size: 15px;
+    }
+    .pdf-close-btn:hover { background: var(--error); color: #fff; border-color: var(--error); }
+    .pdf-title-info { display: flex; align-items: center; gap: 7px; font-size: 12px; font-weight: 500; color: var(--text); overflow: hidden; flex: 1; min-width: 0; margin: 0 10px; }
+    .pdf-file-icon { width: 20px; height: 20px; background: #fee2e2; border-radius: 5px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .pdf-title-text { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pdf-controls { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+    .btn-icon { background: var(--surface-2); border: 1px solid var(--border); color: var(--text-muted); width: 27px; height: 27px; border-radius: 5px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 13px; transition: all 0.14s; font-family: inherit; }
+    .btn-icon:hover { background: var(--navy); border-color: var(--navy); color: #fff; }
+    .toolbar-div { width: 1px; height: 15px; background: var(--border); margin: 0 2px; }
+    .page-wrap { display: flex; align-items: center; gap: 3px; font-size: 11px; color: var(--text-muted); }
+    .page-wrap input { width: 30px; background: var(--surface-2); border: 1px solid var(--border); color: var(--text); text-align: center; padding: 2px 0; border-radius: 4px; font-size: 11px; font-family: inherit; outline: none; }
+    .page-wrap input:focus { border-color: var(--teal); }
+    .zoom-lbl { font-size: 10.5px; color: var(--text-muted); min-width: 30px; text-align: center; }
+
+    .pdf-scroll { flex: 1; overflow: auto; padding: 16px; display: flex; flex-direction: column; align-items: center; }
+    .pdf-page-wrapper { position: relative; background: #fff; box-shadow: 0 4px 20px rgba(0,0,0,0.12); margin-bottom: 14px; border-radius: 2px; }
+    .pdf-page-wrapper canvas { display: block; }
+    .textLayer {
+      position: absolute; left: 0; top: 0; right: 0; bottom: 0;
+      overflow: hidden; opacity: 1; line-height: 1.0; transform-origin: 0 0; pointer-events: none;
+    }
+    .textLayer span {
+      color: transparent; position: absolute; white-space: pre; cursor: text; transform-origin: 0% 0%; pointer-events: auto;
+    }
+    .textLayer span.pdf-highlight {
+      background-color: rgba(250, 204, 21, 0.42) !important;
+      mix-blend-mode: multiply !important;
+      border-radius: 2px;
+      box-shadow: 0 0 0 1px rgba(234, 179, 8, 0.6) !important;
+    }
+
+    /* ══════════════════════════════════════
+       MODALS
+    ══════════════════════════════════════ */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(10,22,40,0.6); backdrop-filter: blur(5px);
+      z-index: 500; align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal-overlay.active { display: flex; }
+    .modal-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); width: 100%; max-width: 500px;
+      padding: 24px; box-shadow: var(--shadow-lg); position: relative;
+      animation: modalIn 0.22s ease; max-height: 90vh; overflow-y: auto;
+    }
+    @keyframes modalIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+    .modal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+    .modal-eyebrow { font-size: 10.5px; font-weight: 700; color: var(--teal); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 3px; }
+    .modal-title { font-size: 17px; font-weight: 700; color: var(--navy); font-family: "Lora", serif; }
+    .btn-close-modal { background: var(--surface-3); border: 1px solid var(--border); color: var(--text-muted); width: 28px; height: 28px; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.14s; margin-top: 2px; }
+    .btn-close-modal:hover { background: var(--error-bg); color: var(--error); border-color: #fca5a5; }
+
+    /* Auth Tab switcher */
+    .auth-tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+    .auth-tab {
+      flex: 1; text-align: center; padding: 8px 0; font-size: 13px; font-weight: 600;
+      color: var(--text-muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s;
+    }
+    .auth-tab.active { color: var(--teal); border-bottom-color: var(--teal); }
+
+    .form-group { margin-bottom: 13px; }
+    .form-group label { display: block; font-size: 11px; font-weight: 700; color: var(--text-muted); margin-bottom: 5px; text-transform: uppercase; letter-spacing: 0.5px; }
+    .form-group input { width: 100%; background: var(--surface-2); border: 1.5px solid var(--border); border-radius: var(--radius-sm); padding: 9px 12px; color: var(--text); font-size: 13px; font-family: inherit; outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+    .form-group input:focus { border-color: var(--teal); box-shadow: 0 0 0 3px rgba(8,145,178,0.1); background: var(--surface); }
+    .form-group input::placeholder { color: var(--text-light); }
+
+    .dropzone {
+      border: 2px dashed var(--border); border-radius: var(--radius);
+      background: var(--surface-2); padding: 22px 18px;
+      text-align: center; cursor: pointer; transition: all 0.2s; margin-bottom: 14px;
+    }
+    .dropzone:hover, .dropzone.dragover { border-color: var(--teal); background: var(--teal-bg); }
+    .dropzone-icon { width: 38px; height: 38px; background: var(--teal-bg); border: 1px solid var(--teal-border); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; }
+    .dropzone-text { font-size: 12.5px; color: var(--text); font-weight: 600; margin-bottom: 3px; }
+    .dropzone-sub { font-size: 11px; color: var(--text-muted); }
+
+    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+    .btn-secondary { background: var(--surface-2); border: 1px solid var(--border); color: var(--text-muted); font-size: 12.5px; font-weight: 600; padding: 8px 15px; border-radius: var(--radius-sm); cursor: pointer; transition: all 0.15s; font-family: inherit; }
+    .btn-secondary:hover { background: var(--surface-3); color: var(--text); }
+    .btn-primary { background: var(--navy); border: none; color: #fff; font-size: 12.5px; font-weight: 600; padding: 8px 18px; border-radius: var(--radius-sm); cursor: pointer; transition: all 0.18s; font-family: inherit; }
+    .btn-primary:hover:not(:disabled) { background: var(--navy-light); }
+    .btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* Progress & Status in Modals */
+    .progress-panel { display: none; margin-top: 14px; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 12px 14px; }
+    .progress-panel.active { display: block; }
+    .progress-bar-wrap { background: var(--surface-3); border-radius: 999px; height: 6px; overflow: hidden; margin-bottom: 8px; }
+    .progress-fill { height: 100%; background: var(--teal); border-radius: 999px; width: 0%; transition: width 0.3s ease; }
+    .progress-info { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); }
+
+    /* Patient Details Table */
+    .vitals-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-bottom: 12px; }
+    .vitals-cell { background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 10px; }
+    .vitals-cell-lbl { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; }
+    .vitals-cell-val { font-size: 14px; font-weight: 700; color: var(--navy); margin-top: 2px; }
+  </style>
+</head>
+<body>
+
+<!-- ═══ LEFT SIDEBAR ═══ -->
+<aside class="sidebar" id="sidebar">
+  <!-- Brand -->
+  <div class="sidebar-brand">
+    <div class="sidebar-brand-icon">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+        <rect x="9" y="2" width="6" height="20" rx="2" fill="white"/>
+        <rect x="2" y="9" width="20" height="6" rx="2" fill="white"/>
+      </svg>
+    </div>
+    <div class="sidebar-brand-text">
+      <div class="sidebar-brand-name">Hypertension CDS</div>
+      <div class="sidebar-brand-sub">Clinical AI & Decision Support</div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="sidebar-actions">
+    <button class="btn-new-chat" onclick="startNewChat()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <line x1="12" y1="5" x2="12" y2="19"/>
+        <line x1="5" y1="12" x2="19" y2="12"/>
+      </svg>
+      + New Chat
+    </button>
+    <button class="btn-patient-sidebar" onclick="openPatientModal()">
+      <span>🩺</span> Upload BP Test Results
+    </button>
+  </div>
+
+  <!-- Chat History Label -->
+  <div class="chat-list-label">Conversations</div>
+
+  <!-- Chat History List -->
+  <div class="chat-list" id="chatList">
+    <!-- Populated by JS -->
+  </div>
+
+  <!-- Footer -->
+  <div class="sidebar-footer">
+    <button class="btn-upload-sidebar" onclick="openUploadModal()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+        <polyline points="17 8 12 3 7 8"/>
+        <line x1="12" y1="3" x2="12" y2="15"/>
+      </svg>
+      Upload Guideline PDF
+    </button>
+  </div>
+</aside>
+
+<!-- ═══ MAIN AREA ═══ -->
+<div class="main-area">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <!-- Sidebar toggle -->
+      <button class="btn-sidebar-toggle" id="sidebarToggleBtn" onclick="toggleSidebar()" title="Toggle sidebar">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+          <line x1="3" y1="6"  x2="21" y2="6"/>
+          <line x1="3" y1="12" x2="21" y2="12"/>
+          <line x1="3" y1="18" x2="21" y2="18"/>
+        </svg>
+      </button>
+      <span class="topbar-label">Guidelines:</span>
+      <div class="guideline-badges" id="guidelineBadges">
+        <span class="badge-guideline"><span class="badge-dot" style="background:#f59e0b;"></span>Loading…</span>
+      </div>
+    </div>
+
+    <!-- Topbar Right (Patient Vitals Badge + User Auth Profile) -->
+    <div class="topbar-right">
+      <button class="btn-topbar-patient" id="topbarPatientBtn" onclick="openPatientModal()">
+        <span>🩺</span> <span id="topbarPatientText">Patient BP Report</span>
+      </button>
+
+      <!-- Auth profile button -->
+      <div style="position: relative;">
+        <button class="btn-topbar-auth" id="authBtn" onclick="openAuthModal()">
+          <span>🔐</span> Sign In
+        </button>
+
+        <div class="user-profile-btn" id="userProfileBtn" style="display:none;" onclick="toggleUserMenu()">
+          <div class="user-avatar" id="userAvatarText">U</div>
+          <span class="user-name-label" id="userNameText">Doctor</span>
+          <span style="font-size:10px; color:var(--text-light);">▼</span>
+        </div>
+
+        <div class="user-menu-popover" id="userMenuPopover">
+          <div class="user-menu-header">
+            <div class="user-menu-fullname" id="menuFullName">User Name</div>
+            <div class="user-menu-email" id="menuEmail">user@example.com</div>
+          </div>
+          <button class="user-menu-item" onclick="openPatientModal()">🩺 Patient Reports</button>
+          <button class="user-menu-item" onclick="startNewChat()">💬 New Chat</button>
+          <div style="height:1px; background:var(--border); margin:4px 0;"></div>
+          <button class="user-menu-item logout" onclick="logoutUser()">🚪 Log Out</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Active Patient Vitals Banner -->
+  <div class="patient-banner" id="patientBanner">
+    <div class="patient-banner-left">
+      <span>🩺 <strong>Active Patient Context:</strong></span>
+      <span class="patient-vitals-pill" id="bannerVitalsPill">BP: 150/95 mmHg · Stage 2 HTN</span>
+      <span class="patient-details-link" onclick="openPatientDetailsModal()">View Full Lab Details →</span>
+    </div>
+    <button class="patient-banner-close" onclick="clearPatientProfile()" title="Clear patient context">✕</button>
+  </div>
+
+  <!-- App shell -->
+  <div class="app-shell" id="appShell">
+
+    <!-- Chat column -->
+    <div class="chat-col">
+      <div class="messages-area" id="messagesArea">
+        <div class="messages-inner" id="messagesInner">
+          <!-- Welcome state -->
+          <div class="welcome-state" id="welcomeState">
+            <div class="welcome-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <rect x="9" y="2" width="6" height="20" rx="2" fill="white"/>
+                <rect x="2" y="9" width="20" height="6" rx="2" fill="white"/>
+              </svg>
+            </div>
+            <div class="welcome-eyebrow">Clinical Decision Support</div>
+            <h1>Hypertension Guidelines & Patient CDS</h1>
+            <p>Ask clinical questions grounded in WHO, ESC, NICE, CDC & USPSTF guidelines, or upload a patient's BP test result for personalized treatment recommendations.</p>
+            <div class="suggestions">
+              <span class="suggestion-chip" onclick="setQuery(this)">BP threshold for pharmacological treatment?</span>
+              <span class="suggestion-chip" onclick="setQuery(this)">Which drug classes are first-line agents?</span>
+              <span class="suggestion-chip" onclick="setQuery(this)">What are target blood pressure goals?</span>
+              <span class="suggestion-chip" onclick="setQuery(this)">When is combination therapy recommended?</span>
+              <span class="suggestion-chip" onclick="setQuery(this)">USPSTF hypertension screening recommendations?</span>
+              <span class="suggestion-chip" onclick="setQuery(this)">Lifestyle modifications for hypertension?</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Input bar -->
+      <div class="input-bar">
+        <div class="input-inner">
+
+          <!-- Active Target Guideline Badge -->
+          <div class="target-badge-container" id="targetBadgeContainer">
+            <div class="target-badge">
+              <span>🎯 Targeting:</span>
+              <strong id="targetBadgeName">Guideline</strong>
+              <button class="target-badge-close" onclick="clearDocFilter()" title="Remove guideline filter">✕</button>
+            </div>
+          </div>
+
+          <!-- @ Mention Autocomplete Popup -->
+          <div class="mention-dropdown" id="mentionDropdown">
+            <div class="mention-header">
+              <span>Select a guideline to target with @</span>
+              <span style="font-size: 10px; font-weight: normal; color: var(--text-light);">↑↓ to navigate · Enter to select · Esc to close</span>
+            </div>
+            <div class="mention-list" id="mentionList">
+              <!-- Populated dynamically via JS -->
+            </div>
+          </div>
+
+          <div class="input-card">
+            <textarea id="queryInput" rows="1"
+              placeholder="Ask about hypertension guidelines (type @ to target a specific PDF)…"
+              oninput="handleInput(this)"
+              onkeydown="handleKey(event)"></textarea>
+            <button class="btn-send" id="sendBtn" onclick="submitQuery()" title="Send query (Enter)">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="22" y1="2" x2="11" y2="13"/>
+                <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+              </svg>
+            </button>
+          </div>
+          <div class="input-hint"><kbd>@</kbd> to mention a guideline · <kbd>Enter</kbd> to send · <kbd>Shift+Enter</kbd> for new line</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PDF Panel -->
+    <div class="pdf-panel" id="pdfPanel">
+      <!-- Drag-to-resize handle on the left edge -->
+      <div class="pdf-resize-handle" id="pdfResizeHandle"></div>
+      <div class="pdf-toolbar">
+        <button class="pdf-close-btn" onclick="closePdf()">✕</button>
+        <div class="pdf-title-info">
+          <div class="pdf-file-icon">
+            <svg width="9" height="11" viewBox="0 0 24 24" fill="#dc2626">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8" fill="none" stroke="white" stroke-width="2"/>
+            </svg>
+          </div>
+          <span class="pdf-title-text" id="pdfDocName">Document</span>
+        </div>
+        <div class="pdf-controls">
+          <button class="btn-icon" onclick="changePage(-1)">‹</button>
+          <div class="page-wrap">
+            <input type="number" id="pageNumInput" min="1" value="1" onchange="goToPage(this.value)"/>
+            <span>/ <span id="pageCount">–</span></span>
+          </div>
+          <button class="btn-icon" onclick="changePage(1)">›</button>
+          <div class="toolbar-div"></div>
+          <button class="btn-icon" onclick="changeZoom(-0.15)">−</button>
+          <span class="zoom-lbl" id="zoomLbl">115%</span>
+          <button class="btn-icon" onclick="changeZoom(0.15)">+</button>
+        </div>
+      </div>
+      <div class="pdf-scroll" id="pdfScroll">
+        <div class="pdf-page-wrapper" id="pdfPageWrapper">
+          <canvas id="pdfCanvas"></canvas>
+          <div class="textLayer" id="pdfTextLayer"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ═══ USER AUTH MODAL (SIGN IN / SIGN UP) ═══ -->
+<div class="modal-overlay" id="authModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div>
+        <div class="modal-eyebrow">Account Portal</div>
+        <div class="modal-title" id="authModalTitle">Sign In</div>
+      </div>
+      <button class="btn-close-modal" onclick="closeAuthModal()">✕</button>
+    </div>
+
+    <div class="auth-tabs">
+      <div class="auth-tab active" id="tabSignIn" onclick="switchAuthTab('signin')">Sign In</div>
+      <div class="auth-tab" id="tabSignUp" onclick="switchAuthTab('signup')">Create Account</div>
+    </div>
+
+    <form id="authForm" onsubmit="submitAuthForm(event)">
+      <div class="form-group" id="nameGroup" style="display:none;">
+        <label>Full Name / Clinician Title</label>
+        <input type="text" id="authNameInput" placeholder="e.g. Dr. Sarah Jenkins or John Doe" />
+      </div>
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" id="authEmailInput" placeholder="name@hospital.org" required />
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="authPasswordInput" placeholder="Minimum 6 characters" required />
+      </div>
+
+      <div id="authErrorMsg" class="error-msg" style="display:none; margin-top:8px;"></div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn-secondary" onclick="closeAuthModal()">Cancel</button>
+        <button type="submit" class="btn-primary" id="authSubmitBtn">Sign In</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══ PATIENT TEST REPORT UPLOAD MODAL ═══ -->
+<div class="modal-overlay" id="patientModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div>
+        <div class="modal-eyebrow">Personalized Clinical CDS</div>
+        <div class="modal-title">Upload Blood Pressure Test Results</div>
+      </div>
+      <button class="btn-close-modal" onclick="closePatientModal()">✕</button>
+    </div>
+
+    <p style="font-size:12.5px; color:var(--text-muted); line-height:1.5; margin-bottom:14px;">
+      Upload a patient's Blood Pressure test report (PDF, 24h ABPM sheet, or hospital lab vitals). The system will extract the vitals and contextualize guideline recommendations directly to their condition.
+    </p>
+
+    <div class="dropzone" id="patientDropzone" onclick="document.getElementById('patientFileInput').click()">
+      <div class="dropzone-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0891b2" stroke-width="2" stroke-linecap="round">
+          <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+        </svg>
+      </div>
+      <div class="dropzone-text" id="patientDropText">Drag & drop BP test report PDF, or click to browse</div>
+      <div class="dropzone-sub">ABPM Reports · Clinic Measurement Sheets · Hospital Lab Vitals (PDF)</div>
+      <input type="file" id="patientFileInput" accept=".pdf" style="display:none;" onchange="handlePatientFileSelected(this.files)" />
+    </div>
+
+    <div class="progress-panel" id="patientProgressPanel">
+      <div class="progress-bar-wrap">
+        <div class="progress-fill" id="patientProgressFill"></div>
+      </div>
+      <div class="progress-info">
+        <span id="patientProgressLabel">Analyzing clinical report…</span>
+        <span id="patientProgressPct"></span>
+      </div>
+    </div>
+
+    <div id="patientErrorMsg" class="error-msg" style="display:none; margin-top:8px;"></div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn-secondary" onclick="closePatientModal()">Cancel</button>
+      <button type="button" class="btn-primary" id="startPatientUploadBtn" onclick="submitPatientReportUpload()" disabled>
+        Analyze & Extract Vitals
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PATIENT REPORT DETAILS MODAL ═══ -->
+<div class="modal-overlay" id="patientDetailsModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div>
+        <div class="modal-eyebrow">Clinical Patient Profile</div>
+        <div class="modal-title" id="detailsModalPatientName">Patient Report</div>
+      </div>
+      <button class="btn-close-modal" onclick="closePatientDetailsModal()">✕</button>
+    </div>
+
+    <div class="vitals-grid">
+      <div class="vitals-cell">
+        <div class="vitals-cell-lbl">Blood Pressure</div>
+        <div class="vitals-cell-val" id="detBP">–/– mmHg</div>
+      </div>
+      <div class="vitals-cell">
+        <div class="vitals-cell-lbl">Hypertension Category</div>
+        <div class="vitals-cell-val" id="detCategory" style="font-size:12.5px; color:var(--teal);">–</div>
+      </div>
+      <div class="vitals-cell">
+        <div class="vitals-cell-lbl">Heart Rate</div>
+        <div class="vitals-cell-val" id="detHR">– bpm</div>
+      </div>
+      <div class="vitals-cell">
+        <div class="vitals-cell-lbl">Age & Gender</div>
+        <div class="vitals-cell-val" id="detAgeGender" style="font-size:12.5px;">–</div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:12px;">
+      <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">Comorbidities & Risk Factors</div>
+      <div id="detComorbidities" style="font-size:12.5px; color:var(--text); line-height:1.5;">None detected</div>
+    </div>
+
+    <div style="margin-bottom:12px;">
+      <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">Current Medications</div>
+      <div id="detMedications" style="font-size:12.5px; color:var(--text); line-height:1.5;">None detected</div>
+    </div>
+
+    <div style="margin-bottom:12px;">
+      <div style="font-size:11px; font-weight:700; color:var(--text-muted); text-transform:uppercase; margin-bottom:4px;">Clinical Synthesis</div>
+      <div id="detSummary" style="font-size:12px; color:var(--text-muted); background:var(--surface-2); padding:8px 10px; border-radius:var(--radius-sm); line-height:1.5;"></div>
+    </div>
+
+    <div class="modal-actions">
+      <button type="button" class="btn-secondary" style="color:var(--error);" onclick="clearPatientProfile(); closePatientDetailsModal();">Remove Profile</button>
+      <button type="button" class="btn-primary" onclick="closePatientDetailsModal()">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ GUIDELINE UPLOAD MODAL ═══ -->
+<div class="modal-overlay" id="uploadModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div>
+        <div class="modal-eyebrow">Pipeline Ingestion</div>
+        <div class="modal-title">Upload Guideline PDF</div>
+      </div>
+      <button class="btn-close-modal" id="modalCloseBtn" onclick="closeUploadModal()">✕</button>
+    </div>
+
+    <div class="dropzone" id="dropzone" onclick="document.getElementById('fileInput').click()">
+      <div class="dropzone-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0891b2" stroke-width="2" stroke-linecap="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+      </div>
+      <div class="dropzone-text" id="dropzoneText">Drag & drop a guideline PDF, or click to browse</div>
+      <div class="dropzone-sub">WHO · NICE · ACC/AHA · ESC · USPSTF · any clinical PDF</div>
+      <input type="file" id="fileInput" accept=".pdf" style="display:none;" onchange="handleFileSelected(this.files)"/>
+    </div>
+
+    <div class="form-group">
+      <label>Guideline Title <span style="font-weight:400;text-transform:none;">(optional)</span></label>
+      <input type="text" id="docNameInput" placeholder="e.g. NICE Guideline NG136"/>
+    </div>
+    <div class="form-group">
+      <label>Issuing Organization <span style="font-weight:400;text-transform:none;">(optional)</span></label>
+      <input type="text" id="orgInput" placeholder="e.g. NICE · ACC/AHA · WHO · ESC"/>
+    </div>
+
+    <div class="progress-panel" id="progressPanel">
+      <div class="progress-bar-wrap">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <div class="progress-info">
+        <span id="progressBarLabel">Initializing…</span>
+        <span id="progressBarPct">0%</span>
+      </div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-secondary" id="cancelBtn" onclick="closeUploadModal()">Cancel</button>
+      <button class="btn-primary" id="startUploadBtn" onclick="submitUpload()" disabled>Upload &amp; Ingest</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+  // ════════════════════════════════
+  //  STATE MANAGEMENT
+  // ════════════════════════════════
+  let currentUser = null;           // { id, name, email }
+  let activePatientProfile = null;  // { filename, vitals, summary }
+  let currentChatId = null;
+  let conversationHistory = [];
+  let messageSources = [];
+  let isLoading = false;
+
+  // @ Mention State
+  let availableGuidelines = [];
+  let activeDocFilter = null;
+  let filteredMentions = [];
+  let selectedMentionIdx = 0;
+
+  // ════════════════════════════════
+  //  INITIALIZATION & AUTH CHECK
+  // ════════════════════════════════
+  async function init() {
+    fetchGuidelines();
+    await checkAuth();
+    await fetchActivePatientProfile();
+    await loadUserChats();
+  }
+
+  async function checkAuth() {
+    try {
+      const res = await fetch("/api/auth/me");
+      const data = await res.json();
+      if (data.user) {
+        currentUser = data.user;
+        renderUserUI();
+      } else {
+        currentUser = null;
+        renderUserUI();
+      }
+    } catch {}
+  }
+
+  function renderUserUI() {
+    const authBtn = document.getElementById("authBtn");
+    const userProfileBtn = document.getElementById("userProfileBtn");
+    const userNameText = document.getElementById("userNameText");
+    const userAvatarText = document.getElementById("userAvatarText");
+    const menuFullName = document.getElementById("menuFullName");
+    const menuEmail = document.getElementById("menuEmail");
+
+    if (currentUser) {
+      authBtn.style.display = "none";
+      userProfileBtn.style.display = "flex";
+      const initial = (currentUser.name || "U")[0].toUpperCase();
+      userAvatarText.textContent = initial;
+      userNameText.textContent = currentUser.name.split(" ")[0];
+      menuFullName.textContent = currentUser.name;
+      menuEmail.textContent = currentUser.email;
+    } else {
+      authBtn.style.display = "flex";
+      userProfileBtn.style.display = "none";
+    }
+  }
+
+  function toggleUserMenu() {
+    const pop = document.getElementById("userMenuPopover");
+    pop.classList.toggle("open");
+  }
+  document.addEventListener("click", (e) => {
+    const btn = document.getElementById("userProfileBtn");
+    const pop = document.getElementById("userMenuPopover");
+    if (btn && pop && !btn.contains(e.target) && !pop.contains(e.target)) {
+      pop.classList.remove("open");
+    }
+  });
+
+  // ── Auth Modal Logic ──
+  let authMode = "signin";
+  function openAuthModal() {
+    document.getElementById("authModal").classList.add("active");
+    switchAuthTab("signin");
+  }
+  function closeAuthModal() {
+    document.getElementById("authModal").classList.remove("active");
+    document.getElementById("authErrorMsg").style.display = "none";
+  }
+  function switchAuthTab(mode) {
+    authMode = mode;
+    const tabSignIn = document.getElementById("tabSignIn");
+    const tabSignUp = document.getElementById("tabSignUp");
+    const title = document.getElementById("authModalTitle");
+    const nameGroup = document.getElementById("nameGroup");
+    const submitBtn = document.getElementById("authSubmitBtn");
+    document.getElementById("authErrorMsg").style.display = "none";
+
+    if (mode === "signin") {
+      tabSignIn.classList.add("active");
+      tabSignUp.classList.remove("active");
+      title.textContent = "Sign In";
+      nameGroup.style.display = "none";
+      submitBtn.textContent = "Sign In";
+    } else {
+      tabSignUp.classList.add("active");
+      tabSignIn.classList.remove("active");
+      title.textContent = "Create Account";
+      nameGroup.style.display = "block";
+      submitBtn.textContent = "Register";
+    }
+  }
+
+  async function submitAuthForm(e) {
+    e.preventDefault();
+    const email = document.getElementById("authEmailInput").value.trim();
+    const password = document.getElementById("authPasswordInput").value;
+    const name = document.getElementById("authNameInput").value.trim();
+    const errEl = document.getElementById("authErrorMsg");
+    errEl.style.display = "none";
+
+    const endpoint = authMode === "signin" ? "/api/auth/login" : "/api/auth/register";
+    const bodyData = authMode === "signin" ? { email, password } : { name, email, password };
+
+    try {
+      const res = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bodyData)
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        errEl.textContent = data.error || "Authentication failed.";
+        errEl.style.display = "block";
+        return;
+      }
+
+      currentUser = data.user;
+      renderUserUI();
+      closeAuthModal();
+      await fetchActivePatientProfile();
+      await loadUserChats();
+    } catch (err) {
+      errEl.textContent = "Server error. Please try again.";
+      errEl.style.display = "block";
+    }
+  }
+
+  async function logoutUser() {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      currentUser = null;
+      renderUserUI();
+      document.getElementById("userMenuPopover").classList.remove("open");
+      startNewChat();
+    } catch {}
+  }
+
+  // ════════════════════════════════
+  //  PATIENT TEST REPORT CDS LOGIC
+  // ════════════════════════════════
+  let selectedPatientFile = null;
+
+  async function fetchActivePatientProfile() {
+    try {
+      const res = await fetch("/api/patient/profile");
+      const data = await res.json();
+      if (data.profile) {
+        activePatientProfile = data.profile;
+        renderPatientBanner();
+      } else {
+        activePatientProfile = null;
+        renderPatientBanner();
+      }
+    } catch {}
+  }
+
+  function renderPatientBanner() {
+    const banner = document.getElementById("patientBanner");
+    const pill = document.getElementById("bannerVitalsPill");
+    const topbarText = document.getElementById("topbarPatientText");
+    const topbarBtn = document.getElementById("topbarPatientBtn");
+
+    if (activePatientProfile && activePatientProfile.vitals) {
+      banner.classList.add("active");
+      topbarBtn.classList.add("active");
+      const v = activePatientProfile.vitals;
+      const sbp = v.systolic || "?";
+      const dbp = v.diastolic || "?";
+      const cat = v.bp_category || "Hypertension";
+      pill.textContent = `BP: ${sbp}/${dbp} mmHg · ${cat}`;
+      topbarText.textContent = `${sbp}/${dbp} mmHg (${cat})`;
+    } else {
+      banner.classList.remove("active");
+      topbarBtn.classList.remove("active");
+      topbarText.textContent = "Patient BP Report";
+    }
+  }
+
+  function openPatientModal() {
+    document.getElementById("patientModal").classList.add("active");
+    document.getElementById("patientProgressPanel").classList.remove("active");
+    document.getElementById("patientErrorMsg").style.display = "none";
+    document.getElementById("startPatientUploadBtn").disabled = true;
+    document.getElementById("patientDropText").textContent = "Drag & drop BP test report PDF, or click to browse";
+    selectedPatientFile = null;
+  }
+  function closePatientModal() {
+    document.getElementById("patientModal").classList.remove("active");
+  }
+
+  function handlePatientFileSelected(files) {
+    if (!files || !files.length) return;
+    const f = files[0];
+    if (!f.name.toLowerCase().endsWith(".pdf")) { alert("Please upload a PDF file."); return; }
+    selectedPatientFile = f;
+    document.getElementById("patientDropText").textContent = `✓  ${f.name}  (${(f.size/1024/1024).toFixed(1)} MB)`;
+    document.getElementById("startPatientUploadBtn").disabled = false;
+  }
+
+  async function submitPatientReportUpload() {
+    if (!selectedPatientFile) return;
+
+    const btn = document.getElementById("startPatientUploadBtn");
+    const prog = document.getElementById("patientProgressPanel");
+    const fill = document.getElementById("patientProgressFill");
+    const lbl = document.getElementById("patientProgressLabel");
+    const errEl = document.getElementById("patientErrorMsg");
+
+    btn.disabled = true;
+    prog.classList.add("active");
+    fill.style.width = "45%";
+    lbl.textContent = "Extracting BP vitals & clinical parameters…";
+    errEl.style.display = "none";
+
+    const form = new FormData();
+    form.append("file", selectedPatientFile);
+
+    try {
+      const res = await fetch("/api/patient/upload-report", { method: "POST", body: form });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        errEl.textContent = data.error || "Failed to analyze test report.";
+        errEl.style.display = "block";
+        btn.disabled = false;
+        prog.classList.remove("active");
+        return;
+      }
+
+      fill.style.width = "100%";
+      lbl.textContent = "✓ Vitals analyzed successfully!";
+      activePatientProfile = {
+        filename: data.filename,
+        vitals: data.vitals,
+        summary: data.summary,
+      };
+      renderPatientBanner();
+      setTimeout(() => {
+        closePatientModal();
+        openPatientDetailsModal();
+      }, 700);
+
+    } catch (e) {
+      errEl.textContent = "Network error while uploading report.";
+      errEl.style.display = "block";
+      btn.disabled = false;
+      prog.classList.remove("active");
+    }
+  }
+
+  function openPatientDetailsModal() {
+    if (!activePatientProfile || !activePatientProfile.vitals) return;
+    const v = activePatientProfile.vitals;
+    document.getElementById("detailsModalPatientName").textContent = v.patient_name ? `Patient: ${v.patient_name}` : "Patient Report Details";
+    document.getElementById("detBP").textContent = `${v.systolic || "?"} / ${v.diastolic || "?"} mmHg`;
+    document.getElementById("detCategory").textContent = v.bp_category || "Hypertension";
+    document.getElementById("detHR").textContent = v.heart_rate ? `${v.heart_rate} bpm` : "Not recorded";
+    document.getElementById("detAgeGender").textContent = `${v.age ? v.age + ' yrs' : '–'}, ${v.gender || '–'}`;
+
+    const comorb = (v.comorbidities && v.comorbidities.length) ? v.comorbidities.map(c => `• ${c}`).join("<br/>") : "None detected";
+    document.getElementById("detComorbidities").innerHTML = comorb;
+
+    const meds = (v.medications && v.medications.length) ? v.medications.map(m => `• ${m}`).join("<br/>") : "None detected";
+    document.getElementById("detMedications").innerHTML = meds;
+
+    document.getElementById("detSummary").textContent = activePatientProfile.summary || "Summary not available.";
+    document.getElementById("patientDetailsModal").classList.add("active");
+  }
+  function closePatientDetailsModal() {
+    document.getElementById("patientDetailsModal").classList.remove("active");
+  }
+
+  async function clearPatientProfile() {
+    try {
+      await fetch("/api/patient/profile", { method: "DELETE" });
+      activePatientProfile = null;
+      renderPatientBanner();
+    } catch {}
+  }
+
+  // ════════════════════════════════
+  //  USER CHAT PERSISTENCE & SYNC
+  // ════════════════════════════════
+  const STORAGE_KEY = "hyper_chats_v2";
+
+  function loadLocalChats() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"); }
+    catch { return {}; }
+  }
+  function saveLocalChats(chats) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(chats));
+  }
+
+  async function loadUserChats() {
+    let allChats = {};
+    if (currentUser) {
+      try {
+        const res = await fetch("/api/user/chats");
+        const data = await res.json();
+        allChats = data.chats || {};
+      } catch {
+        allChats = loadLocalChats();
+      }
+    } else {
+      allChats = loadLocalChats();
+    }
+
+    const ids = Object.keys(allChats);
+    if (ids.length > 0) {
+      const sorted = ids.sort((a,b) => (allChats[b].updatedAt||0) - (allChats[a].updatedAt||0));
+      loadChatFromData(allChats[sorted[0]], allChats);
+    } else {
+      startNewChat();
+    }
+    renderChatList(allChats);
+  }
+
+  function startNewChat() {
+    const id = "chat-" + Date.now();
+    currentChatId = id;
+    conversationHistory = [];
+    messageSources = [];
+    clearDocFilter();
+
+    messagesInner.innerHTML = welcomeStateHTML();
+    document.getElementById("queryInput").focus();
+  }
+
+  function loadChatFromData(chat, allChats) {
+    if (!chat) return;
+    currentChatId = chat.id;
+    conversationHistory = chat.history || [];
+    messageSources = chat.sources || [];
+    clearDocFilter();
+
+    messagesInner.innerHTML = "";
+    if (!chat.messages || chat.messages.length === 0) {
+      messagesInner.innerHTML = welcomeStateHTML();
+    } else {
+      chat.messages.forEach(m => {
+        if (m.role === "user") {
+          appendUserBubble(m.text, false, m.targetDoc, m.patientTagged);
+        } else {
+          const group = document.createElement("div");
+          group.className = "message-group";
+          group.innerHTML = m.html;
+          messagesInner.appendChild(group);
+        }
+      });
+    }
+    renderChatList(allChats);
+    setTimeout(() => { messagesArea.scrollTop = messagesArea.scrollHeight; }, 50);
+  }
+
+  async function loadChat(id) {
+    let allChats = loadLocalChats();
+    if (currentUser) {
+      try {
+        const res = await fetch("/api/user/chats");
+        const data = await res.json();
+        allChats = data.chats || allChats;
+      } catch {}
+    }
+    if (allChats[id]) {
+      loadChatFromData(allChats[id], allChats);
+    }
+  }
+
+  async function deleteChat(id, ev) {
+    ev.stopPropagation();
+    if (currentUser) {
+      try { await fetch(`/api/user/chats/${id}`, { method: "DELETE" }); } catch {}
+    }
+    const allChats = loadLocalChats();
+    delete allChats[id];
+    saveLocalChats(allChats);
+
+    if (id === currentChatId) {
+      startNewChat();
+    }
+    loadUserChats();
+  }
+
+  function renderChatList(allChats) {
+    allChats = allChats || loadLocalChats();
+    const chatList = document.getElementById("chatList");
+    const ids = Object.keys(allChats).sort((a,b) => (allChats[b].updatedAt||0) - (allChats[a].updatedAt||0));
+
+    if (ids.length === 0) {
+      chatList.innerHTML = `<div style="padding:12px 16px; font-size:11px; color:rgba(255,255,255,0.25); font-style:italic;">No conversations yet</div>`;
+      return;
+    }
+
+    const now = Date.now();
+    const ONE_D = 86400000;
+    const groups = { Today: [], Yesterday: [], "This week": [], Older: [] };
+    ids.forEach(id => {
+      const age = now - (allChats[id].updatedAt || 0);
+      if      (age < ONE_D)      groups.Today.push(id);
+      else if (age < 2 * ONE_D)  groups.Yesterday.push(id);
+      else if (age < 7 * ONE_D)  groups["This week"].push(id);
+      else                        groups.Older.push(id);
+    });
+
+    let html = "";
+    for (const [label, groupIds] of Object.entries(groups)) {
+      if (groupIds.length === 0) continue;
+      html += `<div class="chat-group-label">${label}</div>`;
+      groupIds.forEach(id => {
+        const c = allChats[id];
+        const active = id === currentChatId ? "active" : "";
+        html += `
+          <div class="chat-item ${active}" onclick="loadChat('${id}')">
+            <div class="chat-item-icon">💬</div>
+            <div class="chat-item-info">
+              <div class="chat-item-title">${escHtml(c.title || "New conversation")}</div>
+              <div class="chat-item-date">${relTime(c.updatedAt)}</div>
+            </div>
+            <button class="chat-item-del" onclick="deleteChat('${id}', event)" title="Delete">✕</button>
+          </div>`;
+      });
+    }
+    chatList.innerHTML = html;
+  }
+
+  async function persistMessage(role, textOrHtml, extraTargetDoc, patientTagged) {
+    let allChats = loadLocalChats();
+    let chat = allChats[currentChatId] || {
+      id: currentChatId,
+      title: "New conversation",
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+      messages: [],
+      history: [],
+      sources: []
+    };
+
+    chat.messages = chat.messages || [];
+    chat.history = conversationHistory;
+    chat.sources = messageSources;
+    chat.updatedAt = Date.now();
+
+    if (role === "user") {
+      chat.messages.push({ role: "user", text: textOrHtml, targetDoc: extraTargetDoc, patientTagged: patientTagged });
+      if (chat.messages.filter(m => m.role === "user").length === 1) {
+        chat.title = textOrHtml.slice(0, 55) + (textOrHtml.length > 55 ? "…" : "");
+      }
+    } else {
+      chat.messages.push({ role: "assistant", html: textOrHtml });
+    }
+
+    allChats[currentChatId] = chat;
+    saveLocalChats(allChats);
+    renderChatList(allChats);
+
+    // Sync to SQLite if user is logged in
+    if (currentUser) {
+      try {
+        await fetch("/api/user/chats", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(chat)
+        });
+      } catch {}
+    }
+  }
+
+  // ════════════════════════════════
+  //  @ MENTION & TARGET GUIDELINE
+  // ════════════════════════════════
+  function setDocFilter(guideline) {
+    activeDocFilter = guideline;
+    const badgeContainer = document.getElementById("targetBadgeContainer");
+    const badgeName = document.getElementById("targetBadgeName");
+    const org = guideline.organization || '';
+    const name = guideline.document_name || (guideline.local_file ? guideline.local_file.split(/[\\/]/).pop() : guideline.document_id);
+    badgeName.textContent = org ? `${org}: ${name}` : name;
+    badgeContainer.style.display = "flex";
+    hideMentionDropdown();
+    document.getElementById("queryInput").focus();
+  }
+
+  function setDocFilterByIndex(idx) {
+    if (availableGuidelines[idx]) {
+      setDocFilter(availableGuidelines[idx]);
+    }
+  }
+
+  function clearDocFilter() {
+    activeDocFilter = null;
+    const badgeContainer = document.getElementById("targetBadgeContainer");
+    if (badgeContainer) badgeContainer.style.display = "none";
+  }
+
+  function handleInput(el) {
+    autoResize(el);
+    const cursor = el.selectionStart;
+    const textBefore = el.value.slice(0, cursor);
+    const match = textBefore.match(/@([a-zA-Z0-9_\-\.\s]*)$/);
+
+    if (match) {
+      const query = match[1].toLowerCase().trim();
+      showMentionDropdown(query);
+    } else {
+      hideMentionDropdown();
+    }
+  }
+
+  function showMentionDropdown(query) {
+    const dropdown = document.getElementById("mentionDropdown");
+    const list = document.getElementById("mentionList");
+
+    filteredMentions = availableGuidelines.filter(g => {
+      if (!query) return true;
+      const name = (g.document_name || '').toLowerCase();
+      const org = (g.organization || '').toLowerCase();
+      const file = ((g.local_file || '').split(/[\\/]/).pop() || '').toLowerCase();
+      const id = (g.document_id || '').toLowerCase();
+      return name.includes(query) || org.includes(query) || file.includes(query) || id.includes(query);
+    });
+
+    if (filteredMentions.length === 0) {
+      list.innerHTML = `<div style="padding:10px 14px; font-size:11.5px; color:var(--text-muted); text-align:center;">No matching guidelines found</div>`;
+      dropdown.style.display = "flex";
+      return;
+    }
+
+    selectedMentionIdx = 0;
+    renderMentionItems();
+    dropdown.style.display = "flex";
+  }
+
+  function renderMentionItems() {
+    const list = document.getElementById("mentionList");
+    list.innerHTML = filteredMentions.map((g, idx) => {
+      const isSelected = idx === selectedMentionIdx ? 'selected' : '';
+      const org = g.organization || 'Guideline';
+      const name = g.document_name || g.document_id;
+      const filename = (g.local_file || '').split(/[\\/]/).pop() || `${g.document_id}.pdf`;
+      const pagesInfo = g.total_pages ? ` · ${g.total_pages} pages` : '';
+      const chunksInfo = g.total_chunks ? ` (${g.total_chunks} chunks)` : '';
+
+      return `
+        <div class="mention-item ${isSelected}" onclick="selectMentionItem(${idx})">
+          <div class="mention-left">
+            <div class="mention-icon">
+              <svg width="12" height="14" viewBox="0 0 24 24" fill="#dc2626">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8" fill="none" stroke="white" stroke-width="2"/>
+              </svg>
+            </div>
+            <div class="mention-info">
+              <div class="mention-title">${escHtml(name)}</div>
+              <div class="mention-subtitle">${escHtml(filename)}${pagesInfo}${chunksInfo}</div>
+            </div>
+          </div>
+          <span class="mention-org-tag">${escHtml(org)}</span>
+        </div>
+      `;
+    }).join("");
+  }
+
+  function selectMentionItem(idx) {
+    if (!filteredMentions[idx]) return;
+    const guideline = filteredMentions[idx];
+    setDocFilter(guideline);
+
+    const input = document.getElementById("queryInput");
+    const cursor = input.selectionStart;
+    const text = input.value;
+    const before = text.slice(0, cursor);
+    const after = text.slice(cursor);
+    const newBefore = before.replace(/@([a-zA-Z0-9_\-\.\s]*)$/, '').trim();
+    input.value = newBefore ? newBefore + ' ' + after : after;
+    input.selectionStart = input.selectionEnd = newBefore.length ? newBefore.length + 1 : 0;
+    autoResize(input);
+    hideMentionDropdown();
+  }
+
+  function hideMentionDropdown() {
+    const dropdown = document.getElementById("mentionDropdown");
+    if (dropdown) dropdown.style.display = "none";
+  }
+
+  // ════════════════════════════════
+  //  QUERY SUBMISSION
+  // ════════════════════════════════
+  async function submitQuery() {
+    const q = document.getElementById("queryInput").value.trim();
+    if (!q || isLoading) return;
+
+    isLoading = true;
+    document.getElementById("sendBtn").disabled = true;
+
+    const ws = document.getElementById("welcomeState");
+    if (ws) ws.remove();
+
+    const targetFilterValue = activeDocFilter ? (activeDocFilter.document_id || (activeDocFilter.local_file ? activeDocFilter.local_file.split(/[\\/]/).pop() : activeDocFilter.organization)) : null;
+    const targetDisplayLabel = activeDocFilter ? (activeDocFilter.organization ? `${activeDocFilter.organization}: ${activeDocFilter.document_name || activeDocFilter.document_id}` : activeDocFilter.document_name) : null;
+    const isPatientTagged = !!activePatientProfile;
+
+    appendUserBubble(q, true, targetDisplayLabel, isPatientTagged);
+    document.getElementById("queryInput").value = "";
+    document.getElementById("queryInput").style.height = "auto";
+    hideMentionDropdown();
+
+    const typingId = appendTypingIndicator();
+    scrollBottom();
+
+    try {
+      const res = await fetch("/api/query", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          query: q,
+          history: conversationHistory.slice(-6),
+          doc_filter: targetFilterValue,
+          patient_context: activePatientProfile,
+        }),
+      });
+      const data = await res.json();
+      removeEl(typingId);
+
+      if (!res.ok || data.error) { appendError(data.error || "An error occurred."); return; }
+
+      const sources = data.sources || [];
+      const msgIdx = messageSources.length;
+      messageSources.push(sources);
+
+      const assistantHtml = buildAssistantHTML(data.answer, sources, msgIdx);
+      appendAssistantHTML(assistantHtml);
+      persistMessage("assistant", assistantHtml);
+
+      conversationHistory.push({ query: q, answer: stripMd(data.answer) });
+      persistMessage("user", q, targetDisplayLabel, isPatientTagged);
+
+    } catch (e) {
+      removeEl(typingId);
+      appendError("Could not reach the assistant server. Is it running?");
+    } finally {
+      isLoading = false;
+      document.getElementById("sendBtn").disabled = false;
+      scrollBottom();
+    }
+  }
+
+  // ════════════════════════════════
+  //  DOM & CHAT HELPERS
+  // ════════════════════════════════
+  const messagesArea = document.getElementById("messagesArea");
+  const messagesInner = document.getElementById("messagesInner");
+
+  function welcomeStateHTML() {
+    return `
+      <div class="welcome-state" id="welcomeState">
+        <div class="welcome-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <rect x="9" y="2" width="6" height="20" rx="2" fill="white"/>
+            <rect x="2" y="9" width="20" height="6" rx="2" fill="white"/>
+          </svg>
+        </div>
+        <div class="welcome-eyebrow">Clinical Decision Support</div>
+        <h1>Hypertension Guidelines & Patient CDS</h1>
+        <p>Ask clinical questions grounded in WHO, ESC, NICE, CDC & USPSTF guidelines, or upload a patient's BP test result for personalized treatment recommendations.</p>
+        <div class="suggestions">
+          <span class="suggestion-chip" onclick="setQuery(this)">BP threshold for pharmacological treatment?</span>
+          <span class="suggestion-chip" onclick="setQuery(this)">Which drug classes are first-line agents?</span>
+          <span class="suggestion-chip" onclick="setQuery(this)">What are target blood pressure goals?</span>
+          <span class="suggestion-chip" onclick="setQuery(this)">When is combination therapy recommended?</span>
+          <span class="suggestion-chip" onclick="setQuery(this)">USPSTF hypertension screening recommendations?</span>
+          <span class="suggestion-chip" onclick="setQuery(this)">Lifestyle modifications for hypertension?</span>
+        </div>
+      </div>`;
+  }
+
+  function appendUserBubble(text, persist, targetDoc, isPatientTagged) {
+    const wrap = document.createElement("div");
+    wrap.className = "message-group";
+    const targetTagHtml = targetDoc ? `<div class="user-target-tag">🎯 @${escHtml(targetDoc)}</div>` : "";
+    const patientTagHtml = isPatientTagged ? `<div class="user-patient-tag">🩺 Patient Context</div>` : "";
+    wrap.innerHTML = `
+      <div class="user-bubble-wrap">
+        <div class="user-bubble">
+          <div>${patientTagHtml}${targetTagHtml}</div>
+          <div>${escHtml(text)}</div>
+        </div>
+      </div>`;
+    messagesInner.appendChild(wrap);
+    if (persist) persistMessage("user", text, targetDoc, isPatientTagged);
+  }
+
+  function appendTypingIndicator() {
+    const id = "typing-" + Date.now();
+    const div = document.createElement("div");
+    div.id = id; div.className = "assistant-wrap";
+    div.innerHTML = `
+      <div class="assistant-avatar">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+          <rect x="9" y="2" width="6" height="20" rx="2" fill="white"/>
+          <rect x="2" y="9" width="20" height="6" rx="2" fill="white"/>
+        </svg>
+      </div>
+      <div class="typing-indicator">
+        <div class="typing-dots"><span></span><span></span><span></span></div>
+        <span style="font-size:12px; color:var(--text-muted);">Consulting guidelines & synthesizing…</span>
+      </div>`;
+    messagesInner.appendChild(div);
+    return id;
+  }
+
+  function removeEl(id) { const el = document.getElementById(id); if (el) el.remove(); }
+  function appendError(msg) {
+    const div = document.createElement("div");
+    div.className = "error-msg"; div.textContent = msg;
+    messagesInner.appendChild(div);
+  }
+
+  function buildAssistantHTML(answerMd, sources, msgIdx) {
+    let html = marked.parse(answerMd || "");
+    html = html.replace(/\[(\d+)\]/g, (match, numStr) => {
+      const idx = parseInt(numStr, 10) - 1;
+      const s = sources[idx];
+      if (!s) return match;
+      const snippet = (s.text || "").slice(0, 180).replace(/[\r\n]+/g, " ");
+      const file = (s.pdf_file || "Guideline").replace(".pdf", "");
+      return `<span class="cit" onclick="openSource(${msgIdx},${idx})">[${numStr}]<div class="cit-pop"><div class="cit-pop-head">${escHtml(file)} · p.${s.page_start}</div><div class="cit-pop-title">${escHtml(s.section_title||"Clinical Section")}</div><div class="cit-pop-quote">"${escHtml(snippet)}…"</div><div class="cit-pop-action">Click to view &amp; highlight in PDF →</div></div></span>`;
+    });
+
+    let sourcesHtml = "";
+    if (sources.length > 0) {
+      const cards = sources.map((s, i) => {
+        const doc = (s.pdf_file || "Guideline").replace(".pdf", "");
+        return `<div class="source-card" onclick="openSource(${msgIdx},${i})"><div class="source-left"><div class="source-num">${i+1}</div><div class="source-info"><div class="source-doc">${escHtml(doc)}</div><div class="source-title">${escHtml(s.section_title || "Clinical Section")}</div></div></div><div style="display:flex;gap:4px;flex-shrink:0;"><span class="tag">pp.${s.page_start}–${s.page_end}</span></div></div>`;
+      }).join("");
+      sourcesHtml = `<div class="sources-wrap"><div class="sources-hdr"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg> Cited Evidence Sources</div><div class="sources-grid">${cards}</div></div>`;
+    }
+
+    return `
+      <div class="assistant-wrap">
+        <div class="assistant-avatar">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+            <rect x="9" y="2" width="6" height="20" rx="2" fill="white"/>
+            <rect x="2" y="9" width="20" height="6" rx="2" fill="white"/>
+          </svg>
+        </div>
+        <div class="assistant-body">
+          <div class="answer-card">
+            <div class="answer-card-hdr">
+              <div class="answer-hdr-icon">
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#0891b2" stroke-width="2.5"><path d="M9 12l2 2 4-4"/><circle cx="12" cy="12" r="10"/></svg>
+              </div>
+              <span class="answer-hdr-label">Verified Clinical Answer</span>
+            </div>
+            <div class="answer-card-body"><div class="answer-body">${html}</div></div>
+          </div>
+          ${sourcesHtml}
+        </div>
+      </div>`;
+  }
+
+  function appendAssistantHTML(html) {
+    const group = document.createElement("div");
+    group.className = "message-group";
+    group.innerHTML = html;
+    messagesInner.appendChild(group);
+  }
+
+  // ════════════════════════════════
+  //  PDF VIEWER & CONTINUOUS HIGHLIGHT ENGINE
+  // ════════════════════════════════
+  let pdfDoc = null, pdfPage = 1, pdfUrl = null, pdfScale = 1.15, hlText = null;
+
+  function normalizePdfText(text) {
+    if (!text) return "";
+    return text
+      .normalize("NFKD")
+      .replace(/[\u2018\u2019\u201B]/g, "'")
+      .replace(/[\u201C\u201D\u201F]/g, '"')
+      .replace(/[\u2013\u2014\u2212]/g, "-")
+      .replace(/[\u2265]/g, ">=")
+      .replace(/[\u2264]/g, "<=")
+      .replace(/[\u00A0\u2000-\u200B\u202F\u205F]/g, " ")
+      .replace(/[\r\n\t]+/g, " ")
+      .replace(/\s+/g, " ")
+      .trim()
+      .toLowerCase();
+  }
+
+  async function findBestMatchingPage(doc, passageText, pageStart, pageEnd) {
+    if (!doc || pageStart === pageEnd) return pageStart;
+    const cleanPassage = normalizePdfText(passageText);
+    if (!cleanPassage || cleanPassage.length < 10) return pageStart;
+
+    const sampleWords = cleanPassage.split(" ").filter(w => w.length > 2);
+    const samplePhrase = sampleWords.slice(0, Math.min(6, sampleWords.length)).join(" ");
+
+    for (let p = pageStart; p <= pageEnd && p <= doc.numPages; p++) {
+      try {
+        const page = await doc.getPage(p);
+        const tc = await page.getTextContent();
+        const fullPageText = normalizePdfText(tc.items.map(it => it.str).join(" "));
+        if (fullPageText.includes(samplePhrase)) {
+          return p;
+        }
+      } catch (e) {}
+    }
+    return pageStart;
+  }
+
+  async function openSource(msgIdx, srcIdx) {
+    const sources = messageSources[msgIdx];
+    if (!sources) return;
+    const s = sources[srcIdx];
+    if (!s) return;
+    const filename = s.pdf_file || "WHO_guideline_01.pdf";
+    const pageStart = s.page_start || 1;
+    const pageEnd = s.page_end || pageStart;
+    hlText = s.text || "";
+
+    document.getElementById("pdfDocName").textContent = filename;
+    document.getElementById("appShell").classList.add("pdf-open");
+
+    const url = `/pdf/${encodeURIComponent(filename)}`;
+    if (pdfUrl !== url) {
+      pdfUrl = url;
+      await loadPdf(url);
+    }
+
+    let targetPage = pageStart;
+    if (pdfDoc && pageEnd > pageStart) {
+      targetPage = await findBestMatchingPage(pdfDoc, hlText, pageStart, pageEnd);
+    }
+    renderPage(targetPage);
+  }
+
+  function closePdf() { document.getElementById("appShell").classList.remove("pdf-open"); }
+
+  async function loadPdf(url) {
+    try {
+      pdfDoc = await pdfjsLib.getDocument(url).promise;
+      document.getElementById("pageCount").textContent = pdfDoc.numPages;
+      document.getElementById("pageNumInput").max = pdfDoc.numPages;
+    } catch(e) { console.error("PDF load failed:", e); }
+  }
+
+  async function renderPage(num) {
+    if (!pdfDoc) return;
+    num = Math.max(1, Math.min(num, pdfDoc.numPages));
+    pdfPage = num;
+    document.getElementById("pageNumInput").value = num;
+    try {
+      const page = await pdfDoc.getPage(num);
+      const vp = page.getViewport({ scale: pdfScale });
+      const canvas = document.getElementById("pdfCanvas");
+      const wrapper = document.getElementById("pdfPageWrapper");
+      const textLyr = document.getElementById("pdfTextLayer");
+      canvas.width = vp.width; canvas.height = vp.height;
+      wrapper.style.width = vp.width + "px"; wrapper.style.height = vp.height + "px";
+      await page.render({ canvasContext: canvas.getContext("2d"), viewport: vp }).promise;
+      textLyr.innerHTML = ""; textLyr.style.width = vp.width + "px"; textLyr.style.height = vp.height + "px";
+      textLyr.style.setProperty("--scale-factor", vp.scale);
+      const tc = await page.getTextContent();
+      await pdfjsLib.renderTextLayer({ textContentSource: tc, container: textLyr, viewport: vp, textDivs: [] }).promise;
+      if (hlText) applyHighlight(hlText, textLyr);
+    } catch(e) { console.error("Render error:", e); }
+  }
+
+  function applyHighlight(passageText, textLyr) {
+    if (!passageText || !textLyr) return;
+
+    const existing = textLyr.querySelectorAll(".pdf-highlight");
+    existing.forEach(el => el.classList.remove("pdf-highlight"));
+
+    const spans = Array.from(textLyr.querySelectorAll("span"));
+    if (spans.length === 0) return;
+
+    let fullPageStr = "";
+    const spanMap = [];
+
+    spans.forEach(span => {
+      const raw = span.textContent || "";
+      const clean = normalizePdfText(raw);
+      if (!clean || !/[a-zA-Z0-9]/.test(clean)) return;
+      const start = fullPageStr.length;
+      fullPageStr += clean + " ";
+      const end = fullPageStr.length;
+      spanMap.push({ span, start, end, clean });
+    });
+
+    if (!fullPageStr.trim()) return;
+
+    const normPassage = normalizePdfText(passageText);
+    if (!normPassage) return;
+
+    const sentences = normPassage.split(/(?<=[.?!;])\s+|\n+/).map(s => s.trim()).filter(s => s.length >= 10);
+    const phrases = [];
+    if (sentences.length > 0) {
+      sentences.forEach(s => {
+        phrases.push(s);
+        const words = s.split(" ");
+        if (words.length > 8) {
+          for (let i = 0; i <= words.length - 6; i += 4) {
+            phrases.push(words.slice(i, i + 6).join(" "));
+          }
+        }
+      });
+    } else {
+      const words = normPassage.split(" ");
+      for (let i = 0; i <= words.length - 4; i += 3) {
+        phrases.push(words.slice(i, i + 4).join(" "));
+      }
+    }
+
+    const matchIntervals = [];
+    if (fullPageStr.includes(normPassage)) {
+      let idx = fullPageStr.indexOf(normPassage);
+      while (idx !== -1) {
+        matchIntervals.push({ start: idx, end: idx + normPassage.length });
+        idx = fullPageStr.indexOf(normPassage, idx + 1);
+      }
+    } else {
+      phrases.forEach(phrase => {
+        if (!phrase || phrase.length < 8) return;
+        let idx = fullPageStr.indexOf(phrase);
+        let count = 0;
+        while (idx !== -1 && count < 5) {
+          matchIntervals.push({ start: idx, end: idx + phrase.length });
+          idx = fullPageStr.indexOf(phrase, idx + 1);
+          count++;
+        }
+      });
+    }
+
+    let firstHighlightedSpan = null;
+    let totalHighlighted = 0;
+
+    spanMap.forEach(item => {
+      let isMatch = false;
+      for (const interval of matchIntervals) {
+        if (Math.max(item.start, interval.start) < Math.min(item.end, interval.end)) {
+          isMatch = true;
+          break;
+        }
+      }
+      if (isMatch) {
+        item.span.classList.add("pdf-highlight");
+        totalHighlighted++;
+        if (!firstHighlightedSpan) firstHighlightedSpan = item.span;
+      }
+    });
+
+    if (totalHighlighted === 0) {
+      const passageWords = normPassage.split(" ").filter(w => w.length >= 4);
+      if (passageWords.length >= 3) {
+        const trigrams = new Set();
+        for (let i = 0; i <= passageWords.length - 3; i++) {
+          trigrams.add(passageWords.slice(i, i + 3).join(" "));
+        }
+        spans.forEach(span => {
+          const spanClean = normalizePdfText(span.textContent);
+          if (spanClean.length >= 6 && /[a-zA-Z0-9]/.test(spanClean)) {
+            for (const tri of trigrams) {
+              if (spanClean.includes(tri) || tri.includes(spanClean)) {
+                span.classList.add("pdf-highlight");
+                totalHighlighted++;
+                if (!firstHighlightedSpan) firstHighlightedSpan = span;
+                break;
+              }
+            }
+          }
+        });
+      }
+    }
+
+    if (firstHighlightedSpan) {
+      setTimeout(() => {
+        firstHighlightedSpan.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 180);
+    }
+  }
+
+  function changePage(d) { if (pdfDoc) { const n = pdfPage + d; if (n >= 1 && n <= pdfDoc.numPages) renderPage(n); } }
+  function goToPage(v) { const p = parseInt(v,10); if (!isNaN(p)) renderPage(p); }
+  function changeZoom(d) {
+    pdfScale = parseFloat(Math.max(0.6, Math.min(2.5, pdfScale + d)).toFixed(2));
+    document.getElementById("zoomLbl").textContent = Math.round(pdfScale*100) + "%";
+    if (pdfDoc) renderPage(pdfPage);
+  }
+
+  // ════════════════════════════════
+  //  GUIDELINE UPLOAD MODAL & SSE
+  // ════════════════════════════════
+  let selectedFile = null;
+  function openUploadModal() {
+    document.getElementById("uploadModal").classList.add("active");
+    document.getElementById("progressPanel").classList.remove("active");
+    document.getElementById("progressFill").style.width = "0%";
+    document.getElementById("startUploadBtn").disabled = true;
+    document.getElementById("docNameInput").value = "";
+    document.getElementById("orgInput").value = "";
+    document.getElementById("dropzoneText").textContent = "Drag & drop a guideline PDF, or click to browse";
+    selectedFile = null;
+  }
+  function closeUploadModal() {
+    document.getElementById("uploadModal").classList.remove("active");
+  }
+
+  function handleFileSelected(files) {
+    if (!files || !files.length) return;
+    const f = files[0];
+    if (!f.name.toLowerCase().endsWith(".pdf")) { alert("Please select a PDF file."); return; }
+    selectedFile = f;
+    document.getElementById("dropzoneText").textContent = `✓  ${f.name}  (${(f.size/1024/1024).toFixed(1)} MB)`;
+    document.getElementById("startUploadBtn").disabled = false;
+  }
+
+  async function submitUpload() {
+    if (!selectedFile) return;
+    const btn = document.getElementById("startUploadBtn");
+    const prog = document.getElementById("progressPanel");
+    const fill = document.getElementById("progressFill");
+    const lbl = document.getElementById("progressBarLabel");
+    const pct = document.getElementById("progressBarPct");
+
+    btn.disabled = true;
+    prog.classList.add("active");
+    fill.style.width = "5%";
+    lbl.textContent = "Uploading file…";
+
+    const form = new FormData();
+    form.append("file", selectedFile);
+    form.append("document_name", document.getElementById("docNameInput").value.trim());
+    form.append("organization", document.getElementById("orgInput").value.trim());
+
+    try {
+      const res = await fetch("/api/upload", { method: "POST", body: form });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        alert("Upload error: " + (data.error || "Failed"));
+        btn.disabled = false;
+        return;
+      }
+
+      const uploadId = data.upload_id;
+      const evtSource = new EventSource(`/api/upload-stream/${uploadId}`);
+      evtSource.onmessage = (e) => {
+        try {
+          const event = JSON.parse(e.data);
+          if (event.percent >= 0) {
+            fill.style.width = event.percent + "%";
+            pct.textContent = Math.round(event.percent) + "%";
+            lbl.textContent = event.message;
+          }
+          if (event.stage === "complete") {
+            evtSource.close();
+            fetchGuidelines();
+            setTimeout(closeUploadModal, 2200);
+          } else if (event.stage === "error") {
+            evtSource.close();
+            alert("Ingestion error: " + event.message);
+            btn.disabled = false;
+          }
+        } catch {}
+      };
+      evtSource.onerror = () => { evtSource.close(); };
+    } catch (e) {
+      alert("Network error: " + e.message);
+      btn.disabled = false;
+    }
+  }
+
+  // ════════════════════════════════
+  //  UTILITIES & BOOT
+  // ════════════════════════════════
+  async function fetchGuidelines() {
+    try {
+      const res = await fetch("/api/guidelines");
+      const data = await res.json();
+      availableGuidelines = data.guidelines || [];
+
+      if (data.pdf_files) {
+        const regFiles = new Set(availableGuidelines.map(g => (g.local_file || '').split(/[\\/]/).pop()));
+        data.pdf_files.forEach(f => {
+          if (!regFiles.has(f)) {
+            availableGuidelines.push({
+              document_id: 'doc_' + f.replace('.pdf', ''),
+              document_name: f.replace('.pdf', '').replace(/_/g, ' '),
+              organization: 'Guideline',
+              local_file: f,
+            });
+          }
+        });
+      }
+
+      const el = document.getElementById("guidelineBadges");
+      if (availableGuidelines.length > 0) {
+        el.innerHTML = availableGuidelines.map((g, idx) => {
+          const org = g.organization || 'Guideline';
+          const name = g.document_name || g.document_id;
+          return `<span class="badge-guideline" style="cursor:pointer;" onclick="setDocFilterByIndex(${idx})" title="Click to target @${escHtml(name)}"><span class="badge-dot"></span>${escHtml(org)}</span>`;
+        }).join("");
+      } else {
+        el.innerHTML = `<span class="badge-guideline"><span class="badge-dot" style="background:#f59e0b;"></span>No guidelines loaded</span>`;
+      }
+    } catch {}
+  }
+
+  function autoResize(el) { el.style.height = "auto"; el.style.height = Math.min(el.scrollHeight, 150) + "px"; }
+  function handleKey(e) {
+    const dropdown = document.getElementById("mentionDropdown");
+    const isDropdownOpen = dropdown && dropdown.style.display === "flex";
+
+    if (isDropdownOpen && filteredMentions.length > 0) {
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        selectedMentionIdx = (selectedMentionIdx + 1) % filteredMentions.length;
+        renderMentionItems();
+        return;
+      }
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        selectedMentionIdx = (selectedMentionIdx - 1 + filteredMentions.length) % filteredMentions.length;
+        renderMentionItems();
+        return;
+      }
+      if (e.key === "Enter" || e.key === "Tab") {
+        e.preventDefault();
+        selectMentionItem(selectedMentionIdx);
+        return;
+      }
+      if (e.key === "Escape") {
+        e.preventDefault();
+        hideMentionDropdown();
+        return;
+      }
+    }
+
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      submitQuery();
+    }
+  }
+
+  function setQuery(el) {
+    const qi = document.getElementById("queryInput");
+    qi.value = el.textContent.trim();
+    autoResize(qi);
+    qi.focus();
+    submitQuery();
+  }
+
+  function scrollBottom() { setTimeout(() => { messagesArea.scrollTop = messagesArea.scrollHeight; }, 60); }
+  function escHtml(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+  function stripMd(md) { return md.replace(/\[(\d+)\]/g,"").replace(/[#*`_~>]/g,"").replace(/\n+/g," ").trim(); }
+  function relTime(ts) {
+    if (!ts) return "";
+    const d = Date.now() - ts;
+    if (d < 60000) return "Just now";
+    if (d < 3600000) return Math.floor(d/60000) + "m ago";
+    if (d < 86400000) return Math.floor(d/3600000) + "h ago";
+    return Math.floor(d/86400000) + "d ago";
+  }
+
+  // ── Sidebar Collapse Toggle ──
+  function toggleSidebar() {
+    const collapsed = document.body.classList.toggle("sidebar-collapsed");
+    localStorage.setItem("sidebar_collapsed", collapsed ? "1" : "0");
+  }
+  if (localStorage.getItem("sidebar_collapsed") === "1") {
+    document.body.classList.add("sidebar-collapsed");
+  }
+
+  // ── PDF Panel Drag Resize ──
+  (function() {
+    const handle = document.getElementById("pdfResizeHandle");
+    const panel = document.getElementById("pdfPanel");
+    let dragging = false, startX = 0, startW = 0;
+
+    handle.addEventListener("mousedown", (e) => {
+      dragging = true;
+      startX = e.clientX;
+      startW = panel.getBoundingClientRect().width;
+      handle.classList.add("dragging");
+      document.body.classList.add("resizing-pdf");
+      e.preventDefault();
+    });
+
+    document.addEventListener("mousemove", (e) => {
+      if (!dragging) return;
+      const delta = startX - e.clientX;
+      const newW = Math.min(Math.max(startW + delta, 300), window.innerWidth * 0.85);
+      document.documentElement.style.setProperty("--pdf-w", newW + "px");
+    });
+
+    document.addEventListener("mouseup", () => {
+      if (!dragging) return;
+      dragging = false;
+      handle.classList.remove("dragging");
+      document.body.classList.remove("resizing-pdf");
+      const w = panel.getBoundingClientRect().width;
+      localStorage.setItem("pdf_panel_w", Math.round(w));
+      if (pdfDoc) renderPage(pdfPage);
+    });
+
+    const savedW = parseInt(localStorage.getItem("pdf_panel_w"), 10);
+    if (savedW && savedW >= 300) {
+      document.documentElement.style.setProperty("--pdf-w", savedW + "px");
+    }
+  })();
+
+  // Boot
+  init();
+</script>
+</body>
+</html>

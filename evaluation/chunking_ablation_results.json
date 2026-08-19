@@ -1,0 +1,38 @@
+[
+  {
+    "config_id": "cfg_small",
+    "name": "Small Chunks (300/40)",
+    "target_tokens": 300,
+    "overlap_tokens": 40,
+    "total_chunks": 76,
+    "min_tokens": 154,
+    "max_tokens": 410,
+    "avg_tokens": 292,
+    "hit_rate_at_5": 1.0,
+    "precision_at_5": 0.74
+  },
+  {
+    "config_id": "cfg_balanced",
+    "name": "Balanced Chunks (600/80) - Current",
+    "target_tokens": 600,
+    "overlap_tokens": 80,
+    "total_chunks": 36,
+    "min_tokens": 414,
+    "max_tokens": 891,
+    "avg_tokens": 597,
+    "hit_rate_at_5": 1.0,
+    "precision_at_5": 0.54
+  },
+  {
+    "config_id": "cfg_large",
+    "name": "Large Chunks (900/150)",
+    "target_tokens": 900,
+    "overlap_tokens": 150,
+    "total_chunks": 25,
+    "min_tokens": 565,
+    "max_tokens": 1240,
+    "avg_tokens": 861,
+    "hit_rate_at_5": 1.0,
+    "precision_at_5": 0.4
+  }
+]

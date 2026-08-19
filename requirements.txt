@@ -1,0 +1,9 @@
+pymupdf
+python-dotenv
+pydantic
+numpy
+pandas
+rank-bm25
+qdrant-client
+google-genai
+flask

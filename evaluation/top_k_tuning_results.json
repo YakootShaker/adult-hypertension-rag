@@ -1,0 +1,51 @@
+[
+  {
+    "k": 1,
+    "hit_rate": 0.9,
+    "precision": 0.9,
+    "avg_context_tokens": 607,
+    "tradeoff_score": 0.9
+  },
+  {
+    "k": 2,
+    "hit_rate": 1.0,
+    "precision": 0.85,
+    "avg_context_tokens": 1229,
+    "tradeoff_score": 0.94
+  },
+  {
+    "k": 3,
+    "hit_rate": 1.0,
+    "precision": 0.7667,
+    "avg_context_tokens": 1812,
+    "tradeoff_score": 0.9067
+  },
+  {
+    "k": 4,
+    "hit_rate": 1.0,
+    "precision": 0.625,
+    "avg_context_tokens": 2412,
+    "tradeoff_score": 0.85
+  },
+  {
+    "k": 5,
+    "hit_rate": 1.0,
+    "precision": 0.54,
+    "avg_context_tokens": 3075,
+    "tradeoff_score": 0.816
+  },
+  {
+    "k": 8,
+    "hit_rate": 1.0,
+    "precision": 0.35,
+    "avg_context_tokens": 4974,
+    "tradeoff_score": 0.74
+  },
+  {
+    "k": 10,
+    "hit_rate": 1.0,
+    "precision": 0.28,
+    "avg_context_tokens": 6270,
+    "tradeoff_score": 0.712
+  }
+]

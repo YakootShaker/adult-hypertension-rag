@@ -1,0 +1,38 @@
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# Python Cache & Bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Environment Variables & Secrets
+.env
+.env.local
+*.env
+
+# User Databases & Uploaded Patient Reports (Privacy & Security)
+data/users.db
+data/raw/patient_reports/
+data/processed/
+data/index/
+data/qdrant*/
+data/*.pkl
+
+# Archives & Temporary Backups
+*.zip
+*.tar.gz
+*.rar
+/RAG/
+
+# IDE & Editor Configs
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store

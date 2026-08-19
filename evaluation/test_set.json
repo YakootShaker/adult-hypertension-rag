@@ -1,0 +1,147 @@
+[
+  {
+    "query_id": "Q01",
+    "query": "What is the recommended blood pressure threshold for initiating pharmacological treatment in adults with hypertension?",
+    "expected_section_id": "section_003",
+    "expected_chunk_ids": [
+      "who_001_section_003_c001"
+    ],
+    "expected_pages": [
+      19
+    ],
+    "topic": "BP Initiation Threshold",
+    "clinical_intent": "Verify SBP >= 140 or DBP >= 90 in general adults, and SBP 130-139 with CVD / high risk."
+  },
+  {
+    "query_id": "Q02",
+    "query": "Which laboratory tests are recommended before or during initiation of pharmacological treatment for hypertension?",
+    "expected_section_id": "section_004",
+    "expected_chunk_ids": [
+      "who_001_section_004_c001",
+      "who_001_section_004_c002"
+    ],
+    "expected_pages": [
+      20,
+      21
+    ],
+    "topic": "Laboratory Testing",
+    "clinical_intent": "Verify baseline electrolyte, renal function, lipid, glucose, and urine tests."
+  },
+  {
+    "query_id": "Q03",
+    "query": "Is cardiovascular disease (CVD) risk assessment recommended at or after the initiation of hypertension treatment?",
+    "expected_section_id": "section_005",
+    "expected_chunk_ids": [
+      "who_001_section_005_c001"
+    ],
+    "expected_pages": [
+      22
+    ],
+    "topic": "CVD Risk Stratification",
+    "clinical_intent": "Verify WHO guidance on risk scoring at/after initiation without delaying treatment."
+  },
+  {
+    "query_id": "Q04",
+    "query": "Which drug classes are recommended as first-line pharmacological agents for hypertension?",
+    "expected_section_id": "section_006",
+    "expected_chunk_ids": [
+      "who_001_section_006_c001",
+      "who_001_section_006_c002"
+    ],
+    "expected_pages": [
+      23,
+      24
+    ],
+    "topic": "First-Line Drug Classes",
+    "clinical_intent": "Identify Thiazide/thiazide-like, ACEi/ARB, and Dihydropyridine CCBs."
+  },
+  {
+    "query_id": "Q05",
+    "query": "When is combination therapy recommended as initial treatment instead of monotherapy for hypertension?",
+    "expected_section_id": "section_007",
+    "expected_chunk_ids": [
+      "who_001_section_007_c001",
+      "who_001_section_007_c002"
+    ],
+    "expected_pages": [
+      25,
+      26
+    ],
+    "topic": "Combination Therapy",
+    "clinical_intent": "Identify initiation with dual therapy (single-pill combination) for SBP >= 20 or DBP >= 10 above target or high CVD risk."
+  },
+  {
+    "query_id": "Q06",
+    "query": "What are the recommended target blood pressure levels for adults on pharmacological treatment?",
+    "expected_section_id": "section_008",
+    "expected_chunk_ids": [
+      "who_001_section_008_c001"
+    ],
+    "expected_pages": [
+      28
+    ],
+    "topic": "Target Blood Pressure",
+    "clinical_intent": "Target < 140/90 in all adults, and SBP < 130 in those with known CVD or high risk."
+  },
+  {
+    "query_id": "Q07",
+    "query": "How frequently should patients be reassessed after initiating or changing antihypertensive medications?",
+    "expected_section_id": "section_009",
+    "expected_chunk_ids": [
+      "who_001_section_009_c001",
+      "who_001_section_009_c002"
+    ],
+    "expected_pages": [
+      29,
+      30
+    ],
+    "topic": "Follow-Up & Assessment Frequency",
+    "clinical_intent": "Monthly follow-up until target reached, then 3 to 6 months maintenance intervals."
+  },
+  {
+    "query_id": "Q08",
+    "query": "Can nonphysician healthcare professionals (like nurses and pharmacists) initiate and adjust hypertension treatment?",
+    "expected_section_id": "section_010",
+    "expected_chunk_ids": [
+      "who_001_section_010_c001",
+      "who_001_section_010_c002"
+    ],
+    "expected_pages": [
+      31,
+      32
+    ],
+    "topic": "Nonphysician Care / Task Sharing",
+    "clinical_intent": "Task-sharing recommendation for trained nurses and pharmacists following protocols."
+  },
+  {
+    "query_id": "Q09",
+    "query": "What special considerations apply to hypertension treatment in patients with diabetes, chronic kidney disease, or pregnancy?",
+    "expected_section_id": "section_011",
+    "expected_chunk_ids": [
+      "who_001_section_011_c001",
+      "who_001_section_011_c002",
+      "who_001_section_011_c003"
+    ],
+    "expected_pages": [
+      33,
+      34
+    ],
+    "topic": "Special Settings & Comorbidities",
+    "clinical_intent": "Specific management in diabetes, CAD, CKD, and special populations."
+  },
+  {
+    "query_id": "Q10",
+    "query": "What implementation tools and clinical treatment protocols are provided for hypertension care?",
+    "expected_section_id": "section_013",
+    "expected_chunk_ids": [
+      "who_001_section_013_c001",
+      "who_001_section_013_c002"
+    ],
+    "expected_pages": [
+      39,
+      40
+    ],
+    "topic": "Implementation Protocols",
+    "clinical_intent": "HEARTS technical package and stepwise medication titration algorithms."
+  }
+]

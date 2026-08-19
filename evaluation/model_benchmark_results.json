@@ -1,0 +1,424 @@
+{
+  "benchmark_timestamp": "2026-08-17 14:49:16",
+  "test_set_size": 10,
+  "models": {
+    "gemini-embedding-001": {
+      "model_name": "gemini-embedding-001",
+      "vector_size": 3072,
+      "per_query": [
+        {
+          "query_id": "Q01",
+          "latency_ms": 503.97,
+          "mrr": 1.0,
+          "top_retrieved": [
+            "who_001_section_003_c001",
+            "who_001_section_001_c002",
+            "who_001_section_013_c001"
+          ],
+          "p@1": 1.0,
+          "recall@1": 1.0,
+          "hit@1": 1,
+          "p@3": 0.3333,
+          "recall@3": 1.0,
+          "hit@3": 1,
+          "p@5": 0.2,
+          "recall@5": 1.0,
+          "hit@5": 1
+        },
+        {
+          "query_id": "Q02",
+          "latency_ms": 325.29,
+          "mrr": 1.0,
+          "top_retrieved": [
+            "who_001_section_004_c002",
+            "who_001_section_004_c001",
+            "who_001_section_004_c003"
+          ],
+          "p@1": 1.0,
+          "recall@1": 0.5,
+          "hit@1": 1,
+          "p@3": 1.0,
+          "recall@3": 1.0,
+          "hit@3": 1,
+          "p@5": 0.6,
+          "recall@5": 1.0,
+          "hit@5": 1
+        },
+        {
+          "query_id": "Q03",
+          "latency_ms": 334.83,
+          "mrr": 1.0,
+          "top_retrieved": [
+            "who_001_section_005_c001",
+            "who_001_section_006_c001",
+            "who_001_section_009_c002"
+          ],
+          "p@1": 1.0,
+          "recall@1": 1.0,
+          "hit@1": 1,
+          "p@3": 0.3333,
+          "recall@3": 1.0,
+          "hit@3": 1,
+          "p@5": 0.2,
+          "recall@5": 1.0,
+          "hit@5": 1
+        },
+        {
+          "query_id": "Q04",
+          "latency_ms": 331.68,
+          "mrr": 1.0,
+          "top_retrieved": [
+            "who_001_section_006_c002",
+            "who_001_section_006_c003",
+            "who_001_section_007_c002"
+          ],
+          "p@1": 1.0,
+          "recall@1": 0.5,
+          "hit@1": 1,
+          "p@3": 0.6667,
+          "recall@3": 1.0,
+          "hit@3": 1,
+          "p@5": 0.6,
+          "recall@5": 1.0,
+          "hit@5": 1
+        },
+        {
+          "query_id": "Q05",
+          "latency_ms": 327.38,
+          "mrr": 1.0,
+          "top_retrieved": [
+            "who_001_section_007_c002",
+            "who_001_section_007_c003",
+            "who_001_section_007_c004"
+          ],
+          "p@1": 1.0,
+          "recall@1": 0.5,
+          "hit@1": 1,
+          "p@3": 1.0,
+          "recall@3": 1.0,
+          "hit@3": 1,
+          "p@5": 1.0,
+          "recall@5": 1.0,
+          "hit@5": 1
+        },
+        {
+          "query_id": "Q06",
+          "latency_ms": 306.96,
+          "mrr": 0.5,
+          "top_retrieved": [
+            "who_001_section_003_c001",
+            "who_001_section_008_c001",
+            "who_001_section_001_c002"
+          ],
+          "p@1": 0.0,
+          "recall@1": 0.0,
+          "hit@1": 0,
+          "p@3": 0.3333,
+          "recall@3": 1.0,
+          "hit@3": 1,
+          "p@5": 0.2,
+          "recall@5": 1.0,
+          "hit@5": 1
+        },
+        {
+          "query_id": "Q07",
+          "latency_ms": 367.34,
+          "mrr": 1.0,
+          "top_retrieved": [
+            "who_001_section_009_c002",
+            "who_001_section_009_c003",
+            "who_001_section_009_c001"
+          ],
+          "p@1": 1.0,
+          "recall@1": 0.5,
+          "hit@1": 1,
+          "p@3": 1.0,
+          "recall@3": 1.0,
+          "hit@3": 1,
+          "p@5": 0.6,
+          "recall@5": 1.0,
+          "hit@5": 1
+        },
+        {
+          "query_id": "Q08",
+          "latency_ms": 332.53,
+          "mrr": 1.0,
+          "top_retrieved": [
+            "who_001_section_010_c001",
+            "who_001_section_010_c002",
+            "who_001_section_010_c003"
+          ],
+          "p@1": 1.0,
+          "recall@1": 0.5,
+          "hit@1": 1,
+          "p@3": 1.0,
+          "recall@3": 1.0,
+          "hit@3": 1,
+          "p@5": 0.6,
+          "recall@5": 1.0,
+          "hit@5": 1
+        },
+        {
+          "query_id": "Q09",
+          "latency_ms": 315.55,
+          "mrr": 1.0,
+          "top_retrieved": [
+            "who_001_section_011_c004",
+            "who_001_section_011_c005",
+            "who_001_section_011_c003"
+          ],
+          "p@1": 1.0,
+          "recall@1": 0.3333,
+          "hit@1": 1,
+          "p@3": 1.0,
+          "recall@3": 1.0,
+          "hit@3": 1,
+          "p@5": 0.8,
+          "recall@5": 1.0,
+          "hit@5": 1
+        },
+        {
+          "query_id": "Q10",
+          "latency_ms": 337.4,
+          "mrr": 1.0,
+          "top_retrieved": [
+            "who_001_section_013_c001",
+            "who_001_section_013_c002",
+            "who_001_section_013_c003"
+          ],
+          "p@1": 1.0,
+          "recall@1": 0.5,
+          "hit@1": 1,
+          "p@3": 1.0,
+          "recall@3": 1.0,
+          "hit@3": 1,
+          "p@5": 0.6,
+          "recall@5": 1.0,
+          "hit@5": 1
+        }
+      ],
+      "metrics": {
+        "avg_latency_ms": 348.29,
+        "mrr": 0.95,
+        "hit_rate@1": 0.9,
+        "precision@1": 0.9,
+        "recall@1": 0.5333,
+        "hit_rate@3": 1.0,
+        "precision@3": 0.7667,
+        "recall@3": 1.0,
+        "hit_rate@5": 1.0,
+        "precision@5": 0.54,
+        "recall@5": 1.0
+      }
+    },
+    "all-MiniLM-L6-v2": {
+      "model_name": "local-all-MiniLM-L6-v2",
+      "vector_size": 384,
+      "per_query": [
+        {
+          "query_id": "Q01",
+          "latency_ms": 20.38,
+          "mrr": 1.0,
+          "top_retrieved": [
+            "who_001_section_003_c001",
+            "who_001_section_001_c002",
+            "who_001_section_008_c001"
+          ],
+          "p@1": 1.0,
+          "recall@1": 1.0,
+          "hit@1": 1,
+          "p@3": 0.3333,
+          "recall@3": 1.0,
+          "hit@3": 1,
+          "p@5": 0.2,
+          "recall@5": 1.0,
+          "hit@5": 1
+        },
+        {
+          "query_id": "Q02",
+          "latency_ms": 12.76,
+          "mrr": 1.0,
+          "top_retrieved": [
+            "who_001_section_004_c002",
+            "who_001_section_003_c001",
+            "who_001_section_001_c002"
+          ],
+          "p@1": 1.0,
+          "recall@1": 0.5,
+          "hit@1": 1,
+          "p@3": 0.3333,
+          "recall@3": 0.5,
+          "hit@3": 1,
+          "p@5": 0.2,
+          "recall@5": 0.5,
+          "hit@5": 1
+        },
+        {
+          "query_id": "Q03",
+          "latency_ms": 8.68,
+          "mrr": 0.0,
+          "top_retrieved": [
+            "who_001_section_008_c001",
+            "who_001_section_006_c001",
+            "who_001_section_012_c001"
+          ],
+          "p@1": 0.0,
+          "recall@1": 0.0,
+          "hit@1": 0,
+          "p@3": 0.0,
+          "recall@3": 0.0,
+          "hit@3": 0,
+          "p@5": 0.0,
+          "recall@5": 0.0,
+          "hit@5": 0
+        },
+        {
+          "query_id": "Q04",
+          "latency_ms": 8.25,
+          "mrr": 1.0,
+          "top_retrieved": [
+            "who_001_section_006_c002",
+            "who_001_section_007_c002",
+            "who_001_section_001_c002"
+          ],
+          "p@1": 1.0,
+          "recall@1": 0.5,
+          "hit@1": 1,
+          "p@3": 0.3333,
+          "recall@3": 0.5,
+          "hit@3": 1,
+          "p@5": 0.2,
+          "recall@5": 0.5,
+          "hit@5": 1
+        },
+        {
+          "query_id": "Q05",
+          "latency_ms": 8.41,
+          "mrr": 1.0,
+          "top_retrieved": [
+            "who_001_section_007_c002",
+            "who_001_section_001_c002",
+            "who_001_section_007_c003"
+          ],
+          "p@1": 1.0,
+          "recall@1": 0.5,
+          "hit@1": 1,
+          "p@3": 0.6667,
+          "recall@3": 1.0,
+          "hit@3": 1,
+          "p@5": 0.4,
+          "recall@5": 1.0,
+          "hit@5": 1
+        },
+        {
+          "query_id": "Q06",
+          "latency_ms": 8.01,
+          "mrr": 1.0,
+          "top_retrieved": [
+            "who_001_section_008_c001",
+            "who_001_section_001_c002",
+            "who_001_section_003_c001"
+          ],
+          "p@1": 1.0,
+          "recall@1": 1.0,
+          "hit@1": 1,
+          "p@3": 0.3333,
+          "recall@3": 1.0,
+          "hit@3": 1,
+          "p@5": 0.2,
+          "recall@5": 1.0,
+          "hit@5": 1
+        },
+        {
+          "query_id": "Q07",
+          "latency_ms": 7.38,
+          "mrr": 1.0,
+          "top_retrieved": [
+            "who_001_section_009_c003",
+            "who_001_section_007_c003",
+            "who_001_section_009_c002"
+          ],
+          "p@1": 1.0,
+          "recall@1": 0.5,
+          "hit@1": 1,
+          "p@3": 0.6667,
+          "recall@3": 1.0,
+          "hit@3": 1,
+          "p@5": 0.4,
+          "recall@5": 1.0,
+          "hit@5": 1
+        },
+        {
+          "query_id": "Q08",
+          "latency_ms": 7.93,
+          "mrr": 1.0,
+          "top_retrieved": [
+            "who_001_section_010_c001",
+            "who_001_section_001_c002",
+            "who_001_section_009_c003"
+          ],
+          "p@1": 1.0,
+          "recall@1": 0.5,
+          "hit@1": 1,
+          "p@3": 0.3333,
+          "recall@3": 0.5,
+          "hit@3": 1,
+          "p@5": 0.2,
+          "recall@5": 0.5,
+          "hit@5": 1
+        },
+        {
+          "query_id": "Q09",
+          "latency_ms": 9.59,
+          "mrr": 0.25,
+          "top_retrieved": [
+            "who_001_section_008_c001",
+            "who_001_section_001_c002",
+            "who_001_section_009_c002"
+          ],
+          "p@1": 0.0,
+          "recall@1": 0.0,
+          "hit@1": 0,
+          "p@3": 0.0,
+          "recall@3": 0.0,
+          "hit@3": 0,
+          "p@5": 0.2,
+          "recall@5": 0.3333,
+          "hit@5": 1
+        },
+        {
+          "query_id": "Q10",
+          "latency_ms": 10.09,
+          "mrr": 0.0,
+          "top_retrieved": [
+            "who_001_section_010_c001",
+            "who_001_section_001_c002",
+            "who_001_section_011_c006"
+          ],
+          "p@1": 0.0,
+          "recall@1": 0.0,
+          "hit@1": 0,
+          "p@3": 0.0,
+          "recall@3": 0.0,
+          "hit@3": 0,
+          "p@5": 0.0,
+          "recall@5": 0.0,
+          "hit@5": 0
+        }
+      ],
+      "metrics": {
+        "avg_latency_ms": 10.15,
+        "mrr": 0.725,
+        "hit_rate@1": 0.7,
+        "precision@1": 0.7,
+        "recall@1": 0.45,
+        "hit_rate@3": 0.7,
+        "precision@3": 0.3,
+        "recall@3": 0.55,
+        "hit_rate@5": 0.8,
+        "precision@5": 0.2,
+        "recall@5": 0.5833
+      }
+    }
+  }
+}

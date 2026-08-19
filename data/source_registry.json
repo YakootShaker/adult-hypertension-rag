@@ -1,0 +1,39 @@
+[
+  {
+    "document_id": "doc_001",
+    "document_name": "WHO_guideline_01",
+    "organization": "WHO",
+    "version": "2021",
+    "source_url": "https://iris.who.int/server/api/core/bitstreams/f062769d-f075-4a00-87af-0a2106e0bd04/content",
+    "topic": "Adult Hypertension Management",
+    "local_file": "data/raw/guidelines/WHO_guideline_01.pdf",
+    "status": "primary"
+  },
+  {
+    "document_id": "doc_hypertension-screening-adults-final-rec-statement",
+    "document_name": "hypertension-screening-adults-final-rec-statement",
+    "organization": "USPSTF).",
+    "local_file": "data\\raw\\guidelines\\hypertension-screening-adults-final-rec-statement.pdf",
+    "status": "indexed",
+    "total_chunks": 50,
+    "total_pages": 7
+  },
+  {
+    "document_id": "doc_cdc_164016_ds1",
+    "document_name": "hypertension in adults",
+    "organization": "cdc",
+    "local_file": "data\\raw\\guidelines\\cdc_164016_DS1.pdf",
+    "status": "indexed",
+    "total_chunks": 17,
+    "total_pages": 11
+  },
+  {
+    "document_id": "doc_2024-esc-hypertension",
+    "document_name": "ESC-hypertension",
+    "organization": "ESC",
+    "local_file": "data\\raw\\guidelines\\2024-ESC-hypertension.pdf",
+    "status": "indexed",
+    "total_chunks": 710,
+    "total_pages": 107
+  }
+]
