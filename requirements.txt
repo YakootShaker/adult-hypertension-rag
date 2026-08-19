@@ -7,3 +7,4 @@ rank-bm25
 qdrant-client
 google-genai
 flask
+gunicorn
